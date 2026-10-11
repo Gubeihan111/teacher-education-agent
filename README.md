@@ -425,7 +425,20 @@ git push -u origin feat/wf1-workflow
 
 本项目采用的图工作流、显式状态、工具注册、持久化检查点、人工复核、模型与规则分离等模式，属于当前生产型智能体系统的主流做法。具体组合不是唯一标准，但适合教师教育这类长流程、强规则、需要证据和人工确认的业务。
 
-公开采用相似设计理念的框架包括：
+### 同类架构的智能体与框架案例
+
+这里的“同类架构”指共享图编排、工具调用、状态管理或专业角色分工等模式，不代表这些项目都使用相同的目录结构、数据库或 Clean Architecture 分层。以下对照依据公开源码和官方文档整理，核对日期为 2026-10-11。
+
+| 案例 | 类型与用途 | 与本项目的相似点 | 主要差异与借鉴方向 |
+| --- | --- | --- | --- |
+| [Open Deep Research](https://github.com/langchain-ai/open_deep_research) | LangChain 的开源深度研究智能体 | 使用 LangGraph，组合模型和搜索工具完成多步骤研究 | 面向研究报告，模型与搜索配置更灵活；可借鉴检索结果压缩、分任务模型配置。该仓库已归档，作为代码案例参考 |
+| [OpenAI Agents SDK 教学分流示例](https://openai.github.io/openai-agents-python/quickstart/) | 官方示例：分流智能体将问题交给数学或历史辅导智能体 | 专业角色分工、明确交接边界 | 示例由模型选择专家；本项目的四阶段转移由程序规则控制，可借鉴专业角色提示词拆分 |
+| [Google ADK 工作流智能体](https://google.github.io/adk-docs/agents/workflow-agents/) | 官方框架：顺序、并行和循环编排 | 使用确定性流程组织多个智能体或步骤 | 是通用编排能力，未包含教师成长业务；可借鉴阶段组合、并行任务和有限循环 |
+| [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/) | 官方框架：连接智能体与普通函数的显式工作流 | 图执行路径、状态管理和模型适配 | 工具和运行时接口不同；可借鉴检查点恢复、人工请求和运行观测 |
+
+LangGraph 是本项目直接采用的工作流基础。其他案例是架构参考，不需要为采用它们的设计思想而同时引入多个编排框架。
+
+完整原理、目录对应和适用边界见[开发手册第13节](docs/TEAM_DEVELOPMENT_GUIDE.md#13-同类架构的智能体与框架案例)。框架能力参考：
 
 - [LangGraph](https://langchain-ai.github.io/langgraph/reference/)：提供图工作流、持久化、耐久执行、人工介入和状态恢复，本项目与其工作流模型最接近。
 - [OpenAI Agents SDK](https://developers.openai.com/api/docs/guides/agents/sdk)：采用专业化 Agent、工具、编排、handoff、guardrails、人工复核和 tracing。
