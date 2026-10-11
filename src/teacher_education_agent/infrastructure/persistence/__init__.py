@@ -1,0 +1,2 @@
+"""persistence infrastructure adapter placeholder."""
+

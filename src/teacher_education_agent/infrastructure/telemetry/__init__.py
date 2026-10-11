@@ -1,0 +1,2 @@
+"""telemetry infrastructure adapter placeholder."""
+

@@ -1,0 +1,288 @@
+# 任务3 会实施与判断培养 Workflow 最终交付版.docx
+任务3 会实施与判断培养 Workflow 最终交付版
+教师专业成长智能体  职前师范生培养第三阶段
+本文件面向业务团队和 LangGraph 开发人员，定义职前师范生“会实施与判断”阶段的培养业务边界、工作流、状态调控、课堂证据、工具接口与任务4交接方式。它不替代公共多源评价 Workflow；其重点是让师范生在可控模拟课堂中完成教学实施、识别关键课堂事件、形成专业判断、调整行动，并在AI支架降低后表现出稳定性。
+核心结论：阶段3不以“完成一次试讲”作为达成，而以“能教、能看学生、能判断、能调整，并在AI支架减少后仍能完成”为阶段性标准。
+一 工作流定位与总体架构
+WF3 保持既定一级架构不变，由 SG3.1 至 SG3.8 组成。SG3.3 是课堂运行核心；运行过程中反复调用 SG3.6 课堂事件与专业判断、SG3.4 状态感知与临界预警、SG3.5 动态支架与控制权调节。SG3.7 负责证据化复盘，SG3.8 只承担同情境或近变式再教学和稳定性验证；更高层次迁移归任务4。
+图1 完整培养业务工作流图
+↓
+↓
+↓
+↓
+↓
+↓
+↓
+↓
+↓
+↓
+表1 工作流基本信息与边界表
+二 阶段3综合能力框架与专项课堂观测Rubric
+阶段3采用“综合课堂教学能力框架 + 专项课堂教学Rubric + 专业判断证据”的三层方式，不以单一量表覆盖全部能力。
+表2 关键节点业务规格表
+表3 判断 路由与干预规则表
+3.1 工作流路由规则
+3.2 状态与干预规则
+3.3 L0-L3即时教学支架
+3.4 C1-C4长期控制权状态
+L0-L3 是单次课堂中的局部即时支架；C1-C4 是跨任务的长期控制权状态。局部临时升支架不必然意味着全局控制权退回。两者均为本项目业务操作框架，具体转换阈值需经专家校准和试点验证。
+3.5 教学阶段识别与课堂观测规则
+课堂观测Rubric使用规则：SG3.3 调用 T3-41 至 T3-43 获取Rubric、识别教学阶段并标记教师行为—学生响应证据；SG3.7 使用这些标记定位关键片段，支持证据化复盘；WF3结束后，公共多源评价Workflow才调用 score_rubric_dimension 进行正式评分。Rubric得分不拥有状态路由权。
+表4 成长证据清单
+表5 WF3工具包
+边界说明：score_rubric_dimension 不属于 WF3 工具包，归公共多源评价 Workflow 用于正式Rubric评价。以上工具产生结构化候选证据或执行受控动作；阶段达成与正式评分由相应公共Workflow和专家规则综合决定。
+三 阶段3最终达成判定
+“任务完成”仅说明一轮课堂训练结束，不等同于阶段3达成。阶段达成应由公共多源评价Workflow整合下列四类证据，并结合专家校准阈值作出有限状态判定。
+建议阶段状态：ACHIEVED、PARTIALLY_ACHIEVED、INSUFFICIENT_EVIDENCE。具体阈值、连续成功次数、状态转换规则和Rubric分数区间属于待专家校准与试点验证内容，不在本工作流中预设为既有标准。
+四 文献依据与项目设计边界
+五 TeachingJudgmentEvidencePackage
+WF3结束时形成下列结构化证据包，为公共多源评价、成长画像更新和任务4提供统一输入。
+六 任务3到任务4的上下游关系
+任务3与任务4的边界是“课堂中能否实施与判断”与“课堂后能否自主反思与迁移”的边界。任务3产出真实课堂过程和判断证据，任务4不重复构建课堂运行，而是基于这些证据训练自主问题发现、证据化解释、改进策略、实践验证和高层次迁移。
+接口原则：SG3.8只验证同情境或近变式再教学的可执行性与稳定性；任务4才组织T1近变式、T2结构迁移、T3复杂新情境等更高层次迁移训练。T1-T3属于任务4项目业务分级，不是WF3标准。
+七 开发实施提示
+LangGraph中建议将SG3.3作为可循环的课堂执行Subgraph；SG3.4、SG3.5、SG3.6以显式有限枚举路由返回SG3.3或进入SG3.7。
+所有循环应配置训练预算和退出条件。超过预算时保存现有证据，路由至 WAITING_FOR_REVIEW、补弱任务或人工复核，避免无限循环。
+对状态判断、Rubric观察、教学行为识别等模型输出，应先作为候选证据；正式评价、阶段达成和高风险路由应保留可解释规则与人工复核。
+公共多源评价Workflow拥有正式Rubric评分与综合评价职责；WF3只负责过程采证据与培养性调控。
+参考依据说明
+本文件综合使用用户提供的以下材料作为业务设计依据：Dawson, Butler and Fasching Varner 2026 关于K-12教师能力的系统性叙事综述；Professional Vision 相关研究；教师专业判断、课堂观察与教学质量、Performance Tasks、Architectures of Judgement 等2025至2026年研究；以及用户提供的高阶思维—结构化知识课堂观测量表和既有项目材料。上述材料用于界定能力关注点与设计边界；项目内部状态、支架、控制权和路由规则仍需专家校准与试点验证。
+
+## TABLE 1
+START 进入第三阶段 读取成长画像 任务要求与 GOAL_BASELINE
+
+## TABLE 2
+SG3.1 实践任务接入与训练配置  确定目标 技能焦点 难度 初始支架与证据要求
+
+## TABLE 3
+SG3.2 教学情境与虚拟班级构建  配置内容 虚拟学生 班级差异 课堂事件与复杂度
+
+## TABLE 4
+SG3.3 模拟课堂交互执行 讲解 提问 追问 反馈 等待 调整  持续采集教师行为 学生响应与阶段化观测证据
+
+## TABLE 5
+并行循环  SG3.6 关键课堂事件与专业判断训练  J1感知 → J2解释 → J3行动 → J4结果
+
+## TABLE 6
+并行循环  SG3.4 教师成长状态感知与临界预警  状态与趋势只由行为 学生响应 任务和求助等证据判定
+
+## TABLE 7
+并行循环  SG3.5 动态支架与控制权调节  激发 维持 局部支架 降负 撤除  L0-L3 与 C1-C4
+
+## TABLE 8
+SG3.7 课堂回放与证据化实践复盘  定位关键片段 教师自我解释 形成即时改进目标
+
+## TABLE 9
+SG3.8 再教学与稳定性验证  同情境或近变式再教学  前后比较  支架降低  形成稳定性证据
+
+## TABLE 10
+形成 TeachingJudgmentEvidencePackage  调用公共多源评价 Workflow  调用成长画像更新 Workflow  转入任务4
+
+## TABLE 11
+字段 | 内容
+Workflow ID | WF3_teaching_implementation_judgment
+工作流名称 | 会实施与判断培养工作流
+服务对象 | 职前师范生
+阶段定位 | 职前培养第三阶段；承接“会设计”，为任务4“会反思与迁移”提供实践证据。
+核心目标 | 在低风险、可重复的模拟课堂中，培养教学实施、对学生理解与课堂互动的响应、关键事件专业判断和支架降低后的稳定性。
+智能体角色 | 情境助教、教学陪练、状态观察者；不替师范生完成教学决策。
+进入条件 | 存在已批准的教学任务、GOAL_BASELINE、基本教学设计和可运行的虚拟课堂配置。
+主要输入 | GrowthProfileSnapshot、TeachingPlan、PracticeTask、GOAL_BASELINE、VirtualStudentProfiles、ScenarioConfig、ScaffoldHistory。
+核心子工作流 | SG3.1实践配置；SG3.2情境构建；SG3.3交互执行；SG3.4状态预警；SG3.5支架与控制权；SG3.6事件与判断；SG3.7复盘；SG3.8再教学验证。
+课堂运行核心 | SG3.3。其运行过程中循环调用 SG3.6、SG3.4 与 SG3.5，直至课堂片段或任务结束。
+主要输出 | TeachingJudgmentEvidencePackage、ImmediateImprovementTarget、RetryResult、NextStageRecommendation。
+本阶段负责 | 教学实施、学生响应、课堂事件处理、实时专业判断、动态支架、回放复盘、同情境或近变式再教学。
+本阶段不负责 | 高层次迁移、系统性反思归因、跨情境策略迁移、完整教学研究训练；这些归任务4。
+公共能力调用 | 可调用模拟教学/实践执行能力；结束后调用公共多源评价、RSI策略效果记录和成长画像更新能力。
+课堂观测Rubric边界 | SG3.3指导分阶段教师行为与学生响应证据采集；SG3.7支持关键片段定位与证据化复盘；正式Rubric评分由WF3结束后公共多源评价Workflow执行。
+状态判定边界 | 课堂观测Rubric得分不得直接用于 AT_RISK 或 OVERLOADED 判定；状态由任务难度、过程行为、学生响应、停顿、连续失误、求助及趋势等过程证据判定。
+完成条件 | 完成指定实践与必要关键事件处理，形成可追溯教学、判断、状态、支架与复盘证据；发现明确问题时完成相应再教学或记录证据不足。
+阶段达成原则 | 不等同于任务完成。综合判断教学实施、学生理解与互动响应、J1-J4专业判断链、以及支架降低后的稳定性。
+
+## TABLE 12
+层次 | 使用内容 | 回答的问题 | 使用边界
+综合能力框架 | A 教学实施 Instruction；B 学科教学与学生理解 Content PCK；C 课堂组织与管理 Classroom Management；D 互动沟通关系性教学 Interaction Communication Relational。 | 师范生整体是否具备会实施与判断所需的课堂能力。 | A-C借鉴Dawson等2026综述中高频核心领域；D为本项目针对关系性与情境性能力覆盖不足的扩展，不宣称Dawson提出四维Rubric。
+专项课堂教学Rubric | 高阶思维—结构化知识课堂观测量表。 | 特定教学过程中的高阶思维与结构化知识教学表现如何。 | 与综合框架并列使用；不替代综合能力判断。
+专业判断证据 | J1关键事件识别/感知；J2专业解释与判断依据；J3行动适切性；J4后续学生/课堂结果。 | 师范生能否从课堂事件走向解释、行动与结果观察。 | J1-J4是本项目操作框架，不冒充现成标准化量表；由公共多源评价整合证据。
+
+## TABLE 13
+ID | 关键节点 | 业务目的 | 师范生行为 | 智能体行为 | 主要输出
+N3.1.01 | 读取画像与任务 | 确定当前训练切入点 | 确认目标和已有能力 | 读取画像、历史与约束 | PracticeBaseline
+N3.1.02 | 配置训练任务 | 定义技能焦点、难度、证据与初始支架 | 确认或修订任务 | 生成PracticeTask | PracticeTaskConfig
+N3.2.01 | 建立GOAL_BASELINE | 将目标作为课堂前评价基线 | 确认目标与预期学生表现 | 保存目标基线；不作为teaching_phase | GoalBaseline
+N3.2.02 | 构建情境与班级 | 让课堂既可控又具有差异 | 查看学生画像与约束 | 配置虚拟学生、事件、复杂度 | ScenarioConfig
+N3.3.01 | 开始课堂交互 | 执行教师教学行为 | 讲解、提问、追问、反馈、等待、调整 | 转写、行为识别、时间线记录 | TeachingActionTrace
+N3.3.02 | 采集学生响应 | 保留教师—学生互动链 | 与学生互动 | 生成响应并记录反应与状态 | StudentResponseChain
+N3.3.03 | 识别教学阶段 | 为分阶段证据采集提供位置 | 无 | 调用T3-42识别大阶段与细分阶段 | TeachingPhaseRecord
+N3.3.04 | 提取观测证据 | 采集Rubric相关证据但不正式评分 | 无 | 调用T3-43标记指标关联 | RubricObservationEvidence
+N3.4.01 | 汇聚过程状态证据 | 判断过程是否可解释 | 无 | 校验行为、响应、任务、求助等证据 | StateEvidence
+N3.4.02 | 识别当前成长状态 | 确定是否需要调控 | 继续教学或响应提示 | 分类UNDER_CHALLENGED/OPTIMAL/AT_RISK/OVERLOADED/UNCERTAIN | TrainingState
+N3.4.03 | 预测临界趋势 | 提前发现低投入或过载风险 | 无 | 基于趋势生成预警候选 | StateTrendWarning
+N3.5.01 | 确定干预策略 | 实现适度而非替代式帮助 | 接受或拒绝提示 | 按状态选择激发/维持/支架/降负/撤除 | InterventionDecision
+N3.5.02 | 执行局部支架 | 帮助恢复行动 | 利用提示继续教学 | 输出L0-L3支架并记录 | ScaffoldRecord
+N3.5.03 | 调节控制权 | 随能力提升减少AI介入 | 自主处理 | 更新C1-C4建议与控制权证据 | ControlTransferRecord
+N3.6.01 | 检测关键课堂事件 | 从复杂课堂中定位值得判断的事件 | 注意、解释事件 | 检测教师或学生侧关键事件 | CriticalEvent
+N3.6.02 | J1关键事件感知 | 判断是否注意到教学意义事件 | 指出关键事件 | 记录perception证据 | JudgmentPerception
+N3.6.03 | J2专业解释与依据 | 形成情境化、证据化解释 | 说明学生、内容、情境与理由 | 抽取解释及其证据；不强制单一分类 | JudgmentReasoning
+N3.6.04 | J3行动适切性 | 把判断转成适切行动 | 选择并实施行动 | 检验目标、学生需要与条件匹配 | JudgmentAction
+N3.6.05 | J4后续结果 | 观察行动的课堂后果 | 关注学生与课堂变化 | 关联行动与后续响应 | JudgmentOutcome
+N3.7.01 | 定位关键回放片段 | 将过程证据转为可反思对象 | 观看片段 | 定位事件、转折、支架前后片段 | ReplaySegment
+N3.7.02 | 证据化实践复盘 | 形成即时改进目标 | 自我解释何处及为何需要调整 | 以证据提示支持复盘，不代替任务4归因 | ImmediateImprovementTarget
+N3.8.01 | 构建再教学任务 | 检验即时改进是否可执行 | 准备同情境或近变式再教学 | 选择可比较任务；不做高阶迁移 | RetryTask
+N3.8.02 | 执行再教学 | 形成前后证据 | 再次教学 | 调用实践执行并记录行为与响应 | RetryTrace
+N3.8.03 | 稳定性验证 | 判断支架降低后能否保持 | 在较低支持下完成 | 比较目标行为、结果与支架水平 | StabilityEvidence
+
+## TABLE 14
+Route | 判断问题 | 有限结果 | 后续路由
+R3.1.01 | 任务是否可启动 | READY / NEEDS_REVISION / WAITING_FOR_REVIEW | 进入SG3.2 / 修改任务 / 等待人工复核
+R3.2.01 | 情境是否可运行 | RUNNABLE / TOO_COMPLEX / INSUFFICIENT_CONFIG | 进入SG3.3 / 降低复杂度 / 补齐配置
+R3.3.01 | 是否出现关键事件 | EVENT / NO_EVENT / AMBIGUOUS | 调用SG3.6 / 继续课堂 / 记录后续证据
+R3.4.01 | 状态证据是否充分 | SUFFICIENT / INSUFFICIENT / CONFLICTING | 分类状态 / 补采证据 / 保守不升级干预
+R3.4.02 | 当前成长状态 | UNDER_CHALLENGED / OPTIMAL / AT_RISK / OVERLOADED / UNCERTAIN | 进入相应调控策略
+R3.5.01 | 是否需要调整支架 | ESCALATE / MAINTAIN / FADE / HOLD | 升支架 / 保持 / 撤除 / 继续观察
+R3.6.01 | 专业判断链是否形成 | JUDGMENT_COMPLETE / PARTIAL / NOT_OBSERVED | 记录J1-J4 / 最小提示 / 继续情境
+R3.7.01 | 是否需要再教学 | RETEACH / NO_RETEACH / NEEDS_REVIEW | 进入SG3.8 / 输出证据包 / 人工复核
+R3.8.01 | 稳定性是否足够 | STABLE / PARTIAL / UNSTABLE / INSUFFICIENT_EVIDENCE | 转任务4 / 补弱再练 / 返回相关SG / 补证据
+
+## TABLE 15
+状态 | 可观察线索 | 主要干预
+UNDER_CHALLENGED 激发不足 | 任务过易、反应机械、挑战不足 | 增加问题差异、反例或轻度事件；不直接给答案
+OPTIMAL 适宜挑战 | 存在困难但仍能自主推进 | 维持情境，尽量不干预
+AT_RISK 临界风险 | 停顿上升、错误累积、求助增加或质量退化 | 提前预警，给最小必要提示，必要时减少局部复杂度
+OVERLOADED 过载 | 无法持续决策、连续错误或明显失控 | 降负、提供结构化局部支架，恢复后及时撤除
+UNCERTAIN 证据不确定 | 证据缺失、冲突或不适宜判定 | 补采证据并保守处理；不依据Rubric分数直接判定
+
+## TABLE 16
+等级 | 含义 | 允许动作
+L0 | 不支架 | 仅记录与观察。
+L1 | 最小提示 | 提醒关注学生响应、等待或关键事实；不提供答案。
+L2 | 策略性追问 | 用问题促成判断，例如“这个学生的回答说明了什么？”
+L3 | 结构化局部支架 | 在临界或过载时提供可执行框架或局部策略；恢复后撤除。
+
+## TABLE 17
+状态 | 控制关系 | 业务含义
+C1 | AI较强引导 | 初入阶段或证据不足时，AI提供较多结构；教师仍保留表达与行动责任。
+C2 | 人机协同 | AI提出问题、记录证据，教师参与判断与选择。
+C3 | 教师主导 | 教师自主决策，AI主要观察和最小提示。
+C4 | AI退隐 | AI只在严重风险或人工设定条件下介入，主要记录和复盘。
+
+## TABLE 18
+大阶段 | 细分阶段 | 属性 | 观测重点
+GOAL_BASELINE | 教学目标基线 | 课堂开始前 | 保存目标、预期学习表现和评价基线；不是实时teaching_phase。
+导入新课 | REVIEW_PRIOR 复习旧知 | 实时阶段 | 采集衔接旧知、诊断已有理解及学生进入状态的证据。
+导入新课 | INTRO_NEW 引入新知 | 实时阶段 | 采集情境引入、问题激活与注意调动证据。
+讲授新课 | PRESENT_MATERIAL 呈现材料 | 实时阶段 | 采集内容呈现、表征示范、解释及学生初步响应。
+讲授新课 | PROCESS_INFORMATION 信息加工 | 实时阶段 | 采集提问、比较、推理、学生解释与理解诊断证据。
+复习总结 | REVIEW_CONTENT 复习内容 | 实时阶段 | 采集回顾、纠错、概念巩固和学生回应证据。
+复习总结 | SUMMARIZE_ADVANCE 总结提高 | 实时阶段 | 采集结构化总结、提升与泛化证据。
+练习作业 | CLASS_PRACTICE 课堂练习 | 实时阶段 | 采集练习反馈、差异化支持和即时调整证据。
+练习作业 | HOMEWORK 课后作业 | 实时阶段 | 采集作业说明、评价要求和后续学习支持证据。
+
+## TABLE 19
+Evidence ID | 成长证据 | 来源 | 核心内容
+E3-01 | 实践任务基线 | SG3.1 | 任务目标、技能焦点、难度和初始支架。
+E3-02 | 教学情境基线 | SG3.2 | 班级、虚拟学生、事件与复杂度配置。
+E3-03 | 教学行为序列 | SG3.3 | 教师行动时间线；含teaching_phase、rubric_observation、rubric_indicator_refs。
+E3-04 | 学生响应链 | SG3.3 | 学生回答、参与、情绪或注意变化；含rubric_relevant_student_response。
+E3-05 | 教学调整记录 | SG3.3/3.5 | 教师针对学生响应所作调整及触发条件。
+E3-06 | 关键课堂事件 | SG3.6 | 教师或学生侧具有教学意义的事件。
+E3-07 | J1事件识别证据 | SG3.6 | 师范生是否注意并指出关键事件。
+E3-08 | J2解释与依据 | SG3.6 | 对事件的专业解释、课堂证据和理由。
+E3-09 | J3行动适切性 | SG3.6 | 行动与目标、学生需要和情境条件的匹配。
+E3-10 | J4后续结果 | SG3.6 | 行动后学生理解、参与或课堂进程变化。
+E3-11 | 当前成长状态 | SG3.4 | 状态分类及其过程证据。
+E3-12 | 状态趋势记录 | SG3.4 | 状态变化、临界风险或恢复趋势。
+E3-13 | 临界预警记录 | SG3.4 | 预警时点、依据和后续处理。
+E3-14 | 支架需求判定 | SG3.5 | 需要何种支持及理由。
+E3-15 | 即时支架轨迹 | SG3.5 | L0-L3使用、升级与撤除记录。
+E3-16 | 干预响应记录 | SG3.5 | 支架前后教师行动与学生响应。
+E3-17 | 自主恢复与纠错 | SG3.5 | 教师在支架后恢复自主推进的证据。
+E3-18 | 控制权移交记录 | SG3.5 | C1-C4建议及长期依赖变化。
+E3-19 | 关键回放片段 | SG3.7 | 片段、事件、phase、rubric_indicator_refs及证据定位。
+E3-20 | 师范生即时自我解释 | SG3.7 | 教师对关键片段的实践性说明。
+E3-21 | 即时改进目标 | SG3.7 | 本轮可执行、可观察的改进焦点。
+E3-22 | 再教学行为记录 | SG3.8 | 同情境或近变式再教学中的目标行为。
+E3-23 | 前后改进证据 | SG3.8 | 同phase与同indicator对比、学生响应变化和支架差异。
+E3-24 | 低支架稳定性证据 | SG3.8 | 在较低AI支持下维持关键行为和判断的表现。
+
+## TABLE 20
+Tool ID | Tool | 作用
+T3-01 | get_growth_profile_snapshot | 获取当前成长画像快照
+T3-02 | get_practice_history | 读取既往实践与结果
+T3-03 | get_scaffold_history | 读取支架与控制权历史
+T3-04 | append_growth_evidence | 保存结构化成长证据
+T3-05 | append_strategy_effect_record | 保存教师行动或支架效果记录
+T3-06 | query_training_task | 查询训练任务
+T3-07 | get_teaching_plan | 获取教学设计
+T3-08 | get_virtual_student_profile | 读取虚拟学生画像
+T3-09 | search_virtual_student_profiles | 检索学生画像候选
+T3-10 | get_classroom_event_template | 读取课堂事件模板
+T3-11 | search_event_templates | 检索课堂事件模板
+T3-12 | calculate_scenario_complexity | 计算情境复杂度
+T3-13 | speech_to_text | 语音转写
+T3-14 | text_to_speech | 语音合成
+T3-15 | classify_teacher_action | 识别教师教学行为
+T3-16 | generate_virtual_student_response | 生成虚拟学生响应
+T3-17 | update_virtual_student_state | 更新虚拟学生状态
+T3-18 | append_timeline_event | 记录课堂时间线事件
+T3-19 | detect_pause_duration | 识别停顿时长
+T3-20 | extract_interaction_features | 提取互动特征
+T3-21 | count_recent_errors | 统计近期错误或失误特征
+T3-22 | calculate_help_seeking_features | 计算求助与依赖特征
+T3-23 | calculate_state_trend | 计算状态变化趋势
+T3-24 | validate_state_evidence | 校验状态证据质量
+T3-25 | classify_training_state | 输出状态分类候选
+T3-26 | check_event_trigger_conditions | 检查课堂事件触发条件
+T3-27 | extract_teacher_reasoning | 抽取师范生专业解释
+T3-28 | classify_judgment_evidence | 分类J1-J4判断证据候选
+T3-29 | link_action_to_student_outcome | 关联行动与后续学生结果
+T3-30 | retrieve_scaffold_strategy | 检索支架策略
+T3-31 | generate_scaffold_message | 生成支架信息
+T3-32 | adjust_scenario_difficulty | 调整情境难度
+T3-33 | record_intervention | 记录干预
+T3-34 | compare_pre_post_intervention | 比较干预前后表现
+T3-35 | find_key_timeline_events | 定位关键时间线事件
+T3-36 | get_replay_segment | 获取回放片段
+T3-37 | extract_self_explanation | 抽取师范生自我解释
+T3-38 | generate_evidence_hint | 生成证据提示
+T3-39 | compare_target_behavior | 对比目标行为
+T3-40 | save_retry_result | 保存再教学结果
+T3-41 | get_classroom_observation_rubric | 获取专项课堂教学Rubric及指标说明
+T3-42 | classify_teaching_phase | 识别大阶段与细分教学阶段
+T3-43 | extract_rubric_evidence | 提取分阶段教师行为—学生响应Rubric证据
+
+## TABLE 21
+维度 | 达成关注点 | 主要证据
+① 教学实施 | 能够完成基本教学过程，并保持目标、活动与学生学习之间的连贯性。 | E3-03、E3-05、E3-19、E3-22、专项Rubric证据。
+② 学生理解与互动响应 | 能够依据学生表现调整教学，而非只执行预设讲稿。 | E3-04、E3-05、E3-10、E3-23。
+③ 专业判断 | 形成“发现关键事件 → 证据化解释 → 适切行动 → 观察后果”的J1-J4链。 | E3-06至E3-10、E3-20。
+④ 支架撤除后的稳定性 | AI支持减少后，仍能保持关键教学行为与专业判断。 | E3-15至E3-18、E3-23、E3-24。
+
+## TABLE 22
+类别 | 内容 | 在WF3中的使用
+文献直接支持 | Dawson等2026综述显示，教师能力评价常高频聚焦教学实施、内容知识与课堂管理，同时较少覆盖关系性和情境性能力。 | 用于综合能力框架A-C的顶层边界；D为本项目扩展。
+文献直接支持 | Professional Vision相关研究将课堂专业视觉理解为关键事件感知与解释的关联过程。 | 支持J1关键事件感知与J2专业解释的业务设计。
+文献直接支持 | 专业判断研究强调判断具有情境性，包含关注什么、为何判断及判断如何形成；理由可涉及技术、价值或规范考虑。 | 作为J2证据分析参考，不将特定研究对象分类机械作为通用硬评分项。
+文献直接支持 | 课堂观察与教学质量研究强调关键教学事件检测，并关注教师—学生共同建构的课堂过程。 | 支持E3-03教师行为序列与E3-04学生响应链联动采集。
+文献直接支持 | Performance Tasks与审慎练习研究支持低风险、形成性、可重复的技能分解训练与反馈。 | 支持SG3.1任务配置、SG3.8再教学和稳定性验证。
+文献直接支持 | Architectures of Judgement相关研究提醒：Rubric契合不等于完整专业判断，关系性和情境性能力不应被忽略。 | 支持“Rubric + 判断链 + 学生响应 + 支架轨迹”的多源评价逻辑。
+本项目业务操作框架 | SG3.1-SG3.8、状态枚举、L0-L3、C1-C4、J1-J4、E3-01至E3-24、T3-01至T3-43。 | 用于首版可解释、可实现的业务与开发交接；不冒充标准化成熟量表。
+待专家校准阈值 | 状态阈值、支架升级或撤除阈值、控制权转换条件、阶段达成阈值、专项Rubric与综合判断权重。 | 由学科与教师教育专家结合试点数据确定；保留人工复核入口。
+
+## TABLE 23
+Package section | 内容
+01 Practice and Scenario Baseline | PracticeTask、GOAL_BASELINE、ScenarioConfig、VirtualStudentProfiles。
+02 Teaching Interaction Evidence | E3-03教学行为序列、E3-04学生响应链、E3-05教学调整记录。
+03 Professional Judgment Evidence | E3-06至E3-10，覆盖J1-J4。
+04 State and Scaffold Evidence | E3-11至E3-18，覆盖状态、预警、L0-L3与C1-C4轨迹。
+05 Replay and Improvement Evidence | E3-19至E3-24，覆盖回放、自我解释、再教学、前后比较与低支架稳定性。
+06 Rubric Observation References | 教学阶段、指标关联与证据定位；正式得分不在包内产生。
+07 Handoff Metadata | 证据完整性、待人工复核事项、ImmediateImprovementTarget、NextStageRecommendation。
+
+## TABLE 24
+任务3输出 | 任务4使用方式
+关键课堂事件与J1-J4证据 | 成为任务4自主问题发现和证据化解释的材料；任务4不直接替师范生下问题结论。
+状态、支架与控制权轨迹 | 用于任务4判断自主性和AI依赖变化。
+回放片段与即时改进目标 | 作为任务4反思对象和策略验证的起点。
+再教学与稳定性证据 | 作为任务4区分“即时改进”与“更高层次迁移”的基线。
+专项Rubric观察引用 | 供公共多源评价整合；不以单一得分决定任务4入口。

@@ -1,0 +1,2 @@
+"""Knowledge indexing boundary placeholder."""
+

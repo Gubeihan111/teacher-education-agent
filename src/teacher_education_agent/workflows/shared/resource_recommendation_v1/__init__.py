@@ -1,0 +1,2 @@
+"""Resource recommendation workflow boundary."""
+

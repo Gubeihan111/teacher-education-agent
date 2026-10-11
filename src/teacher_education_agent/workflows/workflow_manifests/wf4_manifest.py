@@ -1,0 +1,53 @@
+"""WF4 source-diagram manifest."""
+from ..detailed import DetailedDefinition, RouteSpec
+from .shared import nodes
+ROWS="""
+N4.1.01|读取成长目标
+N4.1.02|汇聚成长证据
+N4.1.03|证据校验
+N4.1.04|确定反思对象
+N4.2.01|描述关键事实
+N4.2.02|教学评价
+N4.2.03|自主问题发现
+N4.2.04|问题证据绑定
+N4.3.01|初步专业解释
+N4.3.02|证据核验
+N4.3.03|竞争性解释
+N4.3.04|自我关联
+N4.3.05|形成专业解释
+N4.4.01|自主提出替代行动
+N4.4.02|策略比较
+N4.4.03|选择改进策略
+N4.4.04|定义验证证据
+N4.5.01|生成验证任务
+N4.5.02|调用实践执行
+N4.5.03|前后证据比较
+N4.5.04|修正策略/解释
+N4.6.01|提取策略核心原则
+N4.6.02|构建迁移距离画像
+N4.6.03|生成迁移任务
+N4.6.04|独立迁移执行
+N4.6.05|迁移表现分析
+N4.6.06|实践问题转探究问题
+X4.INQUIRY_DECISION|是否进入初步教学探究路径
+N4.6.07|基本证据计划
+N4.6.08|实践解释与下一问题
+N4.7.01|汇聚阶段证据
+N4.7.02|反思维度覆盖与适切性
+N4.7.03|自主性分析
+N4.7.04|迁移达成分析
+N4.7.05|初步探究能力判断
+N4.7.06|阶段达成判定
+N4.7.07|下一成长建议
+X4.COMPLETE|完成阶段四并提交公共评价
+X4.HUMAN_REVIEW|人工复核
+X4.CANCELLED|取消终态
+X4.EXPIRED|过期终态
+X4.FAILED|失败终态
+"""
+TOOLS={"N4.1.01":("wf4.reflection_context_reader","wf4.growth_history_reader"),"N4.1.02":("wf4.practice_evidence_reader",),"N4.2.03":("wf4.problem_candidate_detector",),"N4.2.04":("wf4.evidence_consistency_checker",),"N4.3.01":("wf4.attribution_candidate_generator",),"N4.3.02":("wf4.evidence_chain_validator",),"N4.3.03":("wf4.alternative_explanation_generator",),"N4.4.01":("wf4.strategy_candidate_generator",),"N4.4.02":("wf4.strategy_alignment_checker",),"N4.5.02":("wf4.practice_execution_facade",),"N4.5.03":("wf4.pre_post_evidence_comparator",),"N4.6.03":("wf4.transfer_task_generator",),"N4.6.05":("wf4.transfer_performance_analyzer","wf4.transfer_scaffold_recommender"),"N4.6.06":("wf4.inquiry_question_generator",),"N4.6.07":("wf4.inquiry_plan_builder",),"N4.6.08":("wf4.inquiry_evidence_organizer",),"N4.7.02":("wf4.reflection_coverage_checker",),"N4.7.06":("wf4.stage_achievement_candidate",)}
+WF4=DetailedDefinition("wf4_reflection_transfer_v1",nodes(ROWS,TOOLS),(
+ RouteSpec("N4.1.04",{"SUFFICIENT":"N4.2.01","INSUFFICIENT":"N4.1.02","CONFLICTING":"N4.1.02"},"N4.1.02"),RouteSpec("N4.2.04",{"IDENTIFIED":"N4.3.01","PARTIALLY_IDENTIFIED":"N4.2.03","NOT_IDENTIFIED":"N4.2.01"},"N4.2.03"),RouteSpec("N4.3.02",{"SUPPORTED":"N4.3.03","PARTIAL":"N4.3.01","UNSUPPORTED":"N4.3.01","UNCERTAIN":"N4.3.02"},"N4.3.01"),RouteSpec("N4.3.03",{"YES":"N4.3.04","NO":"N4.3.04","UNCERTAIN":"N4.3.02"},"N4.3.04"),RouteSpec("N4.3.05",{},"N4.4.01"),RouteSpec("N4.4.01",{"YES":"N4.4.02","NO":"N4.4.01","PARTIAL":"N4.4.02"},"N4.4.01"),RouteSpec("N4.4.04",{"CONSISTENT":"N4.5.01","PARTIAL":"N4.4.02","INCONSISTENT":"N4.4.01"},"N4.4.02"),
+ RouteSpec("N4.5.03",{"SUPPORTED":"N4.6.01","PARTIALLY_SUPPORTED":"N4.5.04","NOT_SUPPORTED":"N4.5.04","INSUFFICIENT_EVIDENCE":"N4.5.02"},"N4.5.02"),RouteSpec("N4.5.04",{"EXPLANATION":"N4.3.01","STRATEGY":"N4.4.01","TASK_MISMATCH":"N4.5.01","UNCERTAIN":"X4.HUMAN_REVIEW"},"X4.HUMAN_REVIEW"),RouteSpec("N4.6.02",{"T1":"N4.6.03","T2":"N4.6.03","T3":"N4.6.03"},"N4.6.03"),RouteSpec("N4.6.05",{"SUCCESS":"X4.INQUIRY_DECISION","PARTIAL":"N4.6.06","FAILED":"N4.6.03","INSUFFICIENT_EVIDENCE":"N4.6.04"},"N4.6.06"),RouteSpec("N4.6.06",{"PRINCIPLE_NOT_UNDERSTOOD":"N4.3.01","STRATEGY_RIGID":"N4.4.01","CONTEXT_MISREAD":"N4.6.03","DISTANCE_TOO_HIGH":"N4.6.02","UNCERTAIN":"X4.HUMAN_REVIEW"},"N4.6.03"),RouteSpec("X4.INQUIRY_DECISION",{"YES":"N4.6.07","NO":"N4.7.01"},"N4.7.01"),
+ RouteSpec("N4.7.06",{"ACHIEVED":"N4.7.07","PARTIALLY_ACHIEVED":"N4.7.07","INSUFFICIENT_EVIDENCE":"N4.7.01"},"N4.7.01"),RouteSpec("N4.7.07",{},"X4.COMPLETE"),RouteSpec("X4.COMPLETE",{},"__end__"),RouteSpec("X4.HUMAN_REVIEW",{},"__end__"),RouteSpec("X4.CANCELLED",{},"__end__"),RouteSpec("X4.EXPIRED",{},"__end__"),RouteSpec("X4.FAILED",{},"__end__"),
+),4,global_routes={"cancel":"X4.CANCELLED","expired":"X4.EXPIRED","fatal":"X4.FAILED","help":"X4.HUMAN_REVIEW"})

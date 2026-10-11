@@ -1,0 +1,2 @@
+"""cache infrastructure adapter placeholder."""
+

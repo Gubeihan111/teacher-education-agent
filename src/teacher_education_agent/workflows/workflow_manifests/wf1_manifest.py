@@ -1,0 +1,63 @@
+"""WF1 source-diagram manifest."""
+from ..detailed import DetailedDefinition, RouteSpec
+from .shared import nodes
+ROWS="""
+initialize_session|初始化学习会话
+load_learning_context|加载学习情境
+diagnose_readiness|诊断学习需要与起点
+elicit_goal|征集初步目标
+identify_knowledge_object|识别知识对象
+assess_goal_levels|判断Bloom与SOLO起点
+propose_goal_path|形成二维目标与进阶路径
+confirm_goal|确认目标层级与证据
+persist_goal_contract|固化目标契约
+elicit_question|征集核心问题
+assess_question_quality|评价问题质量
+build_question_tree|构建问题树
+confirm_question_tree|确认问题树
+plan_learning|制定学习策略与节奏
+recommend_resources|推荐候选资源
+confirm_learning_contract|确认学习契约
+persist_learning_contract|固化学习契约
+select_subquestion|选择当前子问题
+capture_initial_evidence|收集先行尝试
+validate_evidence|校验学习证据
+provide_feedback|提供材料、案例或不同观点
+capture_analysis_response|收集比较与核验
+run_conflict_subgraph|调用认知冲突子图
+collect_self_judgment|收集学习者自我判断
+elicit_followup|引导自主追问
+adjust_learning_path|调整策略或资源
+record_tentative_solution|记录子问题暂定解
+integrate_viewpoint|整合学习者观点
+detect_conflict|识别认知冲突
+classify_conflict|分类三层八类
+calculate_cci|计算CCI
+select_regulation_strategy|选择调节策略
+generate_scaffold|生成个性化支架
+capture_post_regulation|收集调节后证据
+reassess_conflict|复评冲突与进展
+evaluate_warning|评估预警
+persist_conflict_episode|记录冲突片段
+verify_sources|核验事实与来源
+request_self_explanation|请求自我解释
+evaluate_self_explanation|评价解释证据
+generate_transfer_task|生成迁移或变式任务
+evaluate_transfer|评价迁移表现
+evaluate_stage_goal|评价阶段目标
+collect_reflection|收集阶段反思与归因
+update_self_efficacy|更新自我效能摘要
+update_learner_profile|更新长期学习画像
+evaluate_overall_goal|评价总体目标
+complete_session|完成会话
+pause_or_manual_help|暂停与人工帮助
+finalize_cancelled|取消会话
+finalize_expired|处理等待过期
+finalize_failed|稳定失败终结
+"""
+TOOLS={"load_learning_context":("wf1.learning_context",),"diagnose_readiness":("wf1.readiness_assessor",),"assess_goal_levels":("wf1.goal_level_assessor",),"assess_question_quality":("wf1.question_assessor",),"recommend_resources":("wf1.resource_recommender",),"provide_feedback":("wf1.learning_feedback",),"capture_initial_evidence":("wf1.evidence_store",),"detect_conflict":("wf1.conflict_detector",),"classify_conflict":("wf1.conflict_classifier",),"calculate_cci":("wf1.cci_calculator",),"select_regulation_strategy":("wf1.strategy_repository",),"verify_sources":("wf1.source_verifier",),"evaluate_stage_goal":("wf1.rubric_evaluator",),"update_learner_profile":("wf1.learner_profile_repository",)}
+WF1=DetailedDefinition("wf1_cr_sdl_v3",nodes(ROWS,TOOLS),(
+ RouteSpec("diagnose_readiness",{"continue":"elicit_goal","request_more":"diagnose_readiness"},"elicit_goal"),RouteSpec("confirm_goal",{"approve":"persist_goal_contract","revise":"elicit_goal","change_level":"propose_goal_path"},"pause_or_manual_help"),RouteSpec("confirm_question_tree",{"approve":"plan_learning","revise":"build_question_tree"},"pause_or_manual_help"),RouteSpec("confirm_learning_contract",{"approve":"persist_learning_contract","revise":"plan_learning"},"pause_or_manual_help"),
+ RouteSpec("validate_evidence",{"valid":"provide_feedback","invalid":"capture_initial_evidence"},"capture_initial_evidence"),RouteSpec("capture_analysis_response",{"eligible":"run_conflict_subgraph","not_eligible":"collect_self_judgment"},"collect_self_judgment"),RouteSpec("run_conflict_subgraph",{},"detect_conflict"),RouteSpec("collect_self_judgment",{"continue_questioning":"elicit_followup","change_strategy":"adjust_learning_path","resolved":"record_tentative_solution"},"pause_or_manual_help"),RouteSpec("reassess_conflict",{"suitable_or_progress":"persist_conflict_episode","still_abnormal_under_limit":"select_regulation_strategy","over_limit_or_help":"evaluate_warning"},"evaluate_warning"),RouteSpec("persist_conflict_episode",{},"collect_self_judgment"),RouteSpec("integrate_viewpoint",{},"verify_sources"),RouteSpec("record_tentative_solution",{"remaining":"select_subquestion","all_tentative":"integrate_viewpoint"},"select_subquestion"),
+ RouteSpec("evaluate_stage_goal",{"not_met":"adjust_learning_path","met":"collect_reflection"},"adjust_learning_path"),RouteSpec("evaluate_overall_goal",{"new_cycle":"elicit_goal","revise":"elicit_goal","complete":"complete_session"},"pause_or_manual_help"),RouteSpec("complete_session",{},"__end__"),RouteSpec("finalize_cancelled",{},"__end__"),RouteSpec("finalize_expired",{},"__end__"),RouteSpec("finalize_failed",{},"__end__"),
+),4,global_routes={"cancel":"finalize_cancelled","expired":"finalize_expired","fatal":"finalize_failed","help":"pause_or_manual_help"})

@@ -1,0 +1,2 @@
+"""Knowledge metadata boundary placeholder."""
+

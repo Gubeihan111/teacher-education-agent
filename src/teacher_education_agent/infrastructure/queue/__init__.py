@@ -1,0 +1,2 @@
+"""queue infrastructure adapter placeholder."""
+

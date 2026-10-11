@@ -1,0 +1,41 @@
+"""WF3 source-diagram manifest."""
+from ..detailed import DetailedDefinition, RouteSpec
+from .shared import nodes
+ROWS="""
+N3.1.01|获取成长起点
+N3.1.02|生成训练任务
+N3.2.01|建立GOAL_BASELINE
+N3.2.02|生成情境与班级
+N3.3.01|开始课堂交互
+N3.3.02|采集学生响应
+N3.3.03|识别教学阶段
+N3.3.04|提取观察证据
+N3.4.01|汇聚状态证据
+N3.4.02|识别当前成长状态
+N3.4.03|预测临界趋势
+N3.5.01|确定干预方向
+N3.5.02|执行局部支架
+N3.5.03|调整控制权
+N3.6.01|捕捉关键课堂事件
+N3.6.02|J1关键事件感知
+N3.6.03|J2专业解释与推理
+N3.6.04|J3判断行动选择
+N3.6.05|J4结果追踪
+N3.7.01|定位关键回放片段
+N3.7.02|证据核实与改进目标
+N3.8.01|生成再教学任务
+N3.8.02|执行再教学
+N3.8.03|稳定性验证
+X3.COMPLETE|完成阶段三并输出证据包
+X3.HUMAN_REVIEW|人工复核
+X3.CANCELLED|取消终态
+X3.EXPIRED|过期终态
+X3.FAILED|失败终态
+"""
+TOOLS={"N3.1.01":("wf3.growth_profile_reader","wf3.practice_history_reader"),"N3.1.02":("wf3.task_config_reader",),"N3.2.02":("wf3.scenario_complexity_calculator","wf3.student_config_reader"),"N3.3.01":("wf3.speech_recognizer","wf3.teacher_action_recognizer"),"N3.3.02":("wf3.virtual_student_responder",),"N3.3.03":("wf3.phase_classifier",),"N3.3.04":("wf3.rubric_evidence_mapper",),"N3.4.02":("wf3.student_state_estimator",),"N3.4.03":("wf3.classroom_event_detector",),"N3.5.01":("wf3.scaffold_recommender",),"N3.5.02":("wf3.scaffold_message_generator",),"N3.6.01":("wf3.classroom_event_detector",),"N3.6.03":("wf3.judgment_candidate_generator",),"N3.7.01":("wf3.key_timeline_extractor",),"N3.8.03":("wf3.pre_post_comparator",)}
+WF3=DetailedDefinition("wf3_teaching_implementation_judgment_v1",nodes(ROWS,TOOLS),(
+ RouteSpec("N3.1.02",{"READY":"N3.2.01","NEEDS_REVISION":"N3.1.02","WAITING_FOR_REVIEW":"X3.HUMAN_REVIEW"},"N3.1.02"),RouteSpec("N3.2.02",{"RUNNABLE":"N3.3.01","TOO_COMPLEX":"N3.2.02","INSUFFICIENT_CONFIG":"N3.1.02"},"N3.2.02"),
+ RouteSpec("N3.3.04",{"EVENT":"N3.6.01","NO_EVENT":"N3.4.01","AMBIGUOUS":"N3.4.01"},"N3.4.01"),RouteSpec("N3.4.01",{"SUFFICIENT":"N3.4.02","INSUFFICIENT":"N3.3.04","CONFLICTING":"N3.4.03"},"N3.3.04"),RouteSpec("N3.4.02",{"UNDER_CHALLENGED":"N3.5.01","OPTIMAL":"N3.5.01","AT_RISK":"N3.5.01","OVERLOADED":"N3.5.01","UNCERTAIN":"N3.4.03"},"N3.4.03"),RouteSpec("N3.5.01",{"ESCALATE":"N3.5.02","MAINTAIN":"N3.5.02","FADE":"N3.5.03","HOLD":"N3.5.03"},"N3.5.03"),RouteSpec("N3.6.05",{"JUDGMENT_COMPLETE":"N3.7.01","PARTIAL":"N3.6.02","NOT_OBSERVED":"N3.3.01"},"N3.7.01"),
+ RouteSpec("N3.7.02",{"RETEACH":"N3.8.01","NO_RETEACH":"X3.COMPLETE","NEEDS_REVIEW":"X3.HUMAN_REVIEW"},"N3.8.03"),RouteSpec("N3.8.03",{"STABLE":"X3.COMPLETE","PARTIAL":"N3.8.01","UNSTABLE":"N3.5.01","INSUFFICIENT_EVIDENCE":"N3.3.04"},"X3.HUMAN_REVIEW"),
+ RouteSpec("X3.COMPLETE",{},"__end__"),RouteSpec("X3.HUMAN_REVIEW",{},"__end__"),RouteSpec("X3.CANCELLED",{},"__end__"),RouteSpec("X3.EXPIRED",{},"__end__"),RouteSpec("X3.FAILED",{},"__end__"),
+),4,global_routes={"cancel":"X3.CANCELLED","expired":"X3.EXPIRED","fatal":"X3.FAILED","help":"X3.HUMAN_REVIEW"})

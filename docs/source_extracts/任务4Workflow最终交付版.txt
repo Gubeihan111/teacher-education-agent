@@ -1,0 +1,349 @@
+# 任务4Workflow最终交付版.docx
+任务4 会反思与迁移 培养 Workflow 最终交付版
+面向职前师范生的业务工作流与 LangGraph 开发交接规格
+0. 使用说明与冻结约束
+一级结构保持不变：WF4下设SG4.1至SG4.7，不新增一级Workflow。
+任务4的核心目标不是自动生成“标准反思”，而是让师范生逐步具备自主发现问题、形成专业解释、提出并验证策略、在新情境中迁移的能力。
+任务4复用既有模拟教学/实践执行Workflow；不在本阶段重复建设虚拟学生、虚拟班级或模拟课堂。
+业务路由必须采用有限状态枚举；所有重试循环均受训练预算约束，超过预算后进入补弱任务或人工复核。
+0.1 四项最终修订
+一、完整培养业务工作流图
+图1以可编辑的表格化流程图呈现WF4主链、关键路由与公共Workflow调用关系；节点级条件、状态枚举和回退规则详见表3。
+图1  WF4“会反思与迁移”培养业务工作流图
+二、表1 工作流基本信息与边界表
+三、表2 关键节点业务规格表
+为避免单表过宽，表2按SG4.1—SG4.7分组呈现。各节点均由业务规则产生有限状态，再由主Workflow路由。
+SG4.1 成长证据汇聚与反思任务生成
+SG4.2 自主问题发现
+SG4.3 证据核验与问题归因
+SG4.4 改进策略生成与选择
+SG4.5 改进实践验证
+SG4.6 迁移任务生成与独立挑战
+SG4.7 自主性与迁移达成判定
+四、表3 判断、路由与干预规则表
+A. 核心路由规则
+B. 反思支架规则
+C. 反思过程观测与SOLO辅助结构分析
+D. 迁移训练分级与判定维度
+五、表4 成长证据清单
+六、表5 工具包
+工具只负责读取、提取、结构化、生成候选证据或保存记录；阶段通过、回退和支架升级等业务路由权保留在Workflow节点与规则中。
+A. 成长证据与上下文工具
+B. 反思证据工具
+C. 专业解释与策略工具
+D. 反思支架工具
+E. 改进实践验证工具
+F. 迁移任务工具
+G. 初步教学探究工具
+七、最终 ReflectionTransferEvidencePackage 结构
+该证据包是WF4完成后的稳定业务输出，供公共多源评价Workflow、RSI策略效果记录Workflow、成长画像更新Workflow和Teacher Growth Agent / Orchestrator继续使用。
+八、任务3→任务4上下游关系说明
+任务4不是从零开始的反思写作环节，而是以任务3“会实施与判断”形成的真实课堂与再教学证据为输入，进一步训练师范生的自主专业成长。
+8.1 阶段边界对照
+
+## TABLE 1
+交付定位  本文档冻结WF4及SG4.1—SG4.7一级结构，用于业务团队确认培养逻辑，并为1—2名LangGraph开发人员提供可实现的节点、状态、路由、证据和工具边界。
+
+## TABLE 2
+修订 | 最终落实
+A | 五维反思采用“覆盖与适切性”。描述、评价、论证、替代方案与自我关联用于分析反思过程；不要求每次反思机械填满五个维度。
+B | SOLO仅作辅助结构分析，用于描述反思内容由零散到关联、抽象的结构特征；不等同于正式教师反思能力量表。
+C | SG4.6内部明确区分迁移路径与初步教学探究路径。教学探究是迁移成功后的进阶延伸，而不是迁移本身。
+D | 初步教学研究区分基本要求与进阶证据。基本要求是将真实实践问题转化为可探究问题并形成基本证据计划；不把完整科研闭环设为所有任务的必需条件。
+
+## TABLE 3
+START / 进入任务4 | 输入：阶段3及历史成长证据
+SG4.1 成长证据汇聚与反思任务生成 | 确定反思对象、证据范围与目标 / 不替师范生下问题结论
+◇ ReflectionTask有效？ | 否：补充证据/暂缓任务并返回SG4.1 / 是：进入SG4.2
+SG4.2 自主问题发现 | 描述事实 → 评价表现 → 自主识别问题 → 绑定证据
+◇ 是否形成具体、有证据的问题？ | 未识别/部分识别：R1-R3递进支架并重试 / 识别：进入SG4.3
+SG4.3 证据核验与问题归因 | 初步专业解释 → 证据支持 → 竞争性解释 → 自我关联 / 形成“可能原因”，不宣称严格因果
+◇ 是否形成合理的证据化解释？ | 否：证据回看、定向追问或替代解释提示 / 是：进入SG4.4
+SG4.4 改进策略生成与选择 | 替代行动 → 比较 → 选择策略 → 理由 / 明确预期结果与验证证据
+◇ 策略是否针对、可执行且与解释一致？ | 否：策略支架/重新比较 / 是：进入SG4.5
+SG4.5 改进实践验证 | 调用已有“模拟教学/实践执行Workflow” / 采集新证据并判定SUPPORTED等状态
+SG4.6 迁移任务生成与独立挑战 | 迁移路径：T1近变式 → T2结构迁移 → T3复杂新情境 / 进阶延伸：初步教学探究路径
+◇ 迁移表现？ | 失败/部分：诊断来源、最小支架或降低跨度 / 成功：可选进入初步教学探究路径
+SG4.7 自主性与迁移达成判定 | 业务判定：ACHIEVED / PARTIALLY_ACHIEVED / INSUFFICIENT_EVIDENCE / 正式评价由公共多源评价Workflow执行
+END | 输出：ReflectionTransferEvidencePackage + NextGrowthProposal / 调用公共多源评价、RSI策略效果记录、成长画像更新 / 返回Teacher Growth Agent / Orchestrator
+
+## TABLE 4
+关键说明  SG4.5与SG4.6仅调用既有模拟教学/实践执行能力，不在任务4重复建设模拟课堂。SG4.7负责阶段业务达成判定，不替代公共多源评价Workflow的正式评价职责。
+
+## TABLE 5
+字段 | 内容
+Workflow ID | WF4_reflection_transfer
+工作流名称 | 会反思与迁移培养Workflow
+服务对象 | 职前师范生
+阶段定位 | 职前培养第四阶段
+核心目标 | 培养师范生基于真实教学证据自主发现问题、形成专业解释、提出并验证改进策略，并在变化情境中实现适应性迁移。
+智能体角色 | 反思教练 / 成长伙伴
+核心培养问题 | 师范生能否从“AI帮助我改”发展为“我能自己发现、自己解释、自己调整、自己迁移”。
+进入条件 | 已具备阶段3或其他实践产生的可追溯教学证据；有当前成长目标或反思对象；存在可供回看、比较的实践材料。
+主要输入 | TeachingJudgmentEvidencePackage、JudgmentRecord、ReplayResult、ImprovementEvidence、EvaluationResult、ScaffoldHistory、GrowthProfileSnapshot。
+核心过程 | 证据汇聚 → 自主问题发现 → 证据化专业解释 → 策略生成与选择 → 实践验证 → 新情境迁移 → 自主性与迁移达成判定。
+核心子工作流 | SG4.1成长证据汇聚与反思任务生成；SG4.2自主问题发现；SG4.3证据核验与问题归因；SG4.4改进策略生成与选择；SG4.5改进实践验证；SG4.6迁移任务生成与独立挑战；SG4.7自主性与迁移达成判定。
+允许调用的公共Workflow | 模拟教学/实践执行Workflow、公共多源评价Workflow、RSI策略效果记录Workflow、成长画像更新Workflow。
+完成条件 | 在较低AI支持下，能够自主发现问题、形成有证据的专业解释、提出并验证改进策略，并在变化情境中表现出适应性迁移。
+主要输出 | ReflectionTransferEvidencePackage + NextGrowthProposal。
+本阶段负责 | 自主反思、证据化解释、策略形成、改进验证、适应性迁移、初步实践探究。
+本阶段不负责 | 重复建设阶段3课堂实时调控或模拟课堂；替师范生生成“标准反思”；要求全部任务完成正式科研项目；直接写入系统级成长画像。
+阶段3/4边界 | 阶段3解决“刚才哪里需要改、如何即时调整”；阶段4解决“为什么会出现、如何自主改进、能否迁移到新情境”。
+反思评价原则 | 采用反思过程维度覆盖与适切性、证据与论证质量、自主性和结构特征等多源证据；不使用单一“反思深度”总分。
+SOLO定位 | 项目辅助结构分析维度，需结合专家适配和后续验证；不等同于正式教师反思能力量表。
+迁移分级定位 | T1/T2/T3为本项目组织迁移训练任务的业务操作分级，不宣称为文献已有统一标准化迁移量表。
+教学研究定位 | 以实践问题驱动的初步教学探究为主；基本要求与进阶证据分层，不要求所有师范生完成完整科研闭环。
+支架原则 | AI默认低支架；必要时按R1证据提醒、R2定向反思追问、R3结构化反思脚本递进；随着自主性提升逐渐退出。
+循环控制 | 问题发现、解释、策略、验证和迁移均配置尝试预算。达到预算上限后保存当前证据，进入补弱任务、人工复核或等待状态。
+
+## TABLE 6
+节点 | 业务目的 | 师范生行为 | 智能体行为 | 主要输出
+N4.1.01 读取成长目标 | 明确本轮反思范围 | 查看当前成长目标 | 读取画像和历史证据 | reflection_goal
+N4.1.02 汇聚成长证据 | 形成真实证据基础 | 无 | 汇聚课堂、评价、支架、再教学等记录 | raw_reflection_evidence
+N4.1.03 证据校验 | 防止基于缺失/不可追溯材料反思 | 无 | 校验来源、完整性与可追溯性 | evidence_quality
+N4.1.04 确定反思对象 | 控制范围，不替代问题发现 | 查看证据范围 | 确定reflection_object与任务约束，不给问题结论 | ReflectionTask
+
+## TABLE 7
+节点 | 业务目的 | 师范生行为 | 智能体行为 | 主要输出
+N4.2.01 描述关键事实 | 区分事实与判断 | 描述发生了什么 | 对照原始证据 | describing_evidence
+N4.2.02 教学评价 | 从事实转向专业判断 | 判断何处值得关注 | 记录评价依据 | evaluating_evidence
+N4.2.03 自主问题发现 | 训练真正自主反思 | 提出关键实践问题 | 不提前给答案 | ProblemStatement
+N4.2.04 问题证据绑定 | 防止空泛反思 | 指出支持问题的证据 | 建立问题—证据链接 | problem_evidence
+
+## TABLE 8
+节点 | 业务目的 | 师范生行为 | 智能体行为 | 主要输出
+N4.3.01 初步专业解释 | 从“问题”进入“为什么” | 提出可能原因/专业解释 | 结构化记录 | initial_explanation
+N4.3.02 证据核验 | 检查解释是否站得住 | 引用证据 | 检查解释—证据一致性 | supporting_evidence
+N4.3.03 竞争性解释 | 避免单一归因 | 先尝试提出其他解释 | 必要时提供反例问题或证据提醒 | competing_explanations
+N4.3.04 自我关联 | 从分析课堂走向反思自身 | 联系自身行为、习惯、判断 | 记录而不替代师范生表达 | self_reference
+N4.3.05 形成专业解释 | 形成审慎、可修正的解释 | 比较并修正解释 | 汇总证据支持程度与信心 | AttributionResult
+
+## TABLE 9
+节点 | 业务目的 | 师范生行为 | 智能体行为 | 主要输出
+N4.4.01 自主提出替代行动 | 避免AI直接给方案 | 提出多个可能行动 | 必要时低支架提示 | alternative_actions
+N4.4.02 策略比较 | 培养专业选择能力 | 比较不同策略 | 提供比较维度 | strategy_comparison
+N4.4.03 选择改进策略 | 形成可执行方案 | 自主选择并说明理由 | 校验与问题/解释一致性 | selected_strategy
+N4.4.04 定义验证证据 | 避免事后主观判断 | 说明预期结果和需采证据 | 结构化验证标准 | evidence_to_collect
+
+## TABLE 10
+节点 | 业务目的 | 师范生行为 | 智能体行为 | 主要输出
+N4.5.01 生成验证任务 | 把策略转化为实践 | 准备实施 | 形成验证任务配置 | validation_task
+N4.5.02 调用实践执行 | 复用已有课堂执行能力 | 实际实施策略 | 调用模拟教学/实践执行Workflow | new_practice_trace
+N4.5.03 前后证据比较 | 判断证据支持程度 | 无 | 对比目标行为与学生响应 | StrategyValidationResult
+N4.5.04 修正策略/解释 | 形成RSI循环 | 修正解释或策略 | 路由至SG4.3或SG4.4 | revised_result
+
+## TABLE 11
+节点 | 业务目的 | 师范生行为 | 智能体行为 | 主要输出
+N4.6.01 提取策略核心原则 | 为迁移做准备 | 说明策略为何有效 | 提取适用条件与原则 | transfer_principle
+N4.6.02 构建迁移距离画像 | 控制新情境变化程度 | 无 | 生成TransferDistanceProfile | transfer_profile
+N4.6.03 生成迁移任务 | 组织T1/T2/T3挑战 | 接受新挑战 | 生成相应任务 | transfer_task
+N4.6.04 独立迁移执行 | 检验适应性迁移 | 判断、调整、实施 | 降低支架并调用实践Workflow | transfer_trace
+N4.6.05 迁移表现分析 | 避免把照搬当迁移 | 解释为何这样调整 | 分析结构识别、情境敏感、灵活调整等 | TransferResult
+N4.6.06 实践问题转探究问题 | 初步教学探究路径 | 提出可探究问题 | 仅提供最低限度研究支架 | inquiry_question
+N4.6.07 基本证据计划 | 建立证据意识 | 说明采什么、怎么看 | 帮助结构化计划 | evidence_plan
+N4.6.08 实践解释与下一问题 | 形成小型探究闭环 | 解释发现并提出下一问题 | 记录，不要求论文式成果 | TeachingInquiryRecord
+
+## TABLE 12
+节点 | 业务目的 | 师范生行为 | 智能体行为 | 主要输出
+N4.7.01 汇聚阶段证据 | 为业务达成判定服务 | 无 | 汇聚全阶段证据 | stage_evidence
+N4.7.02 反思维度覆盖与适切性 | 判断是否超越单纯描述 | 无 | 分析五维出现与问题适切性 | reflection_coverage
+N4.7.03 自主性分析 | 判断AI是否逐步退出 | 无 | 分析R0-R3、求助与纠错轨迹 | autonomy_evidence
+N4.7.04 迁移达成分析 | 判断是否适应新情境 | 无 | 分析迁移证据 | transfer_evidence
+N4.7.05 初步探究能力判断 | 判断基础研究意识 | 无 | 判断问题转化和证据计划能力 | inquiry_evidence
+N4.7.06 阶段达成判定 | 决定继续、补弱或完成 | 无 | 输出有限业务状态；不执行正式评价 | stage_status
+N4.7.07 下一成长建议 | 形成下一轮输入 | 查看/选择建议 | 形成NextGrowthProposal | next_growth_proposal
+
+## TABLE 13
+Route | 判断问题 | 有限结果 | 后续路由
+R4.1.01 | 证据是否足以支持反思？ | SUFFICIENT / INSUFFICIENT / CONFLICTING | 进入任务 / 补充证据或暂缓
+R4.2.01 | 是否自主形成具体且有证据的问题？ | IDENTIFIED / PARTIALLY_IDENTIFIED / NOT_IDENTIFIED | 进入SG4.3 / 最小支架或重试
+R4.3.01 | 专业解释是否有证据支持？ | SUPPORTED / PARTIAL / UNSUPPORTED / UNCERTAIN | 保留 / 修正 / 补充证据
+R4.3.02 | 是否存在合理竞争解释？ | YES / NO / UNCERTAIN | 比较解释 / 保留 / 补证据
+R4.4.01 | 是否形成可执行策略？ | YES / NO / PARTIAL | 进入比较或修正
+R4.4.02 | 策略与问题解释是否一致？ | CONSISTENT / PARTIAL / INCONSISTENT | 进入验证 / 修正
+R4.5.01 | 当前实践证据对策略支持程度？ | SUPPORTED / PARTIALLY_SUPPORTED / NOT_SUPPORTED / INSUFFICIENT_EVIDENCE | 迁移 / 修正 / 回退 / 补证据
+R4.5.02 | 验证不被支持的主要来源？ | EXPLANATION / STRATEGY / TASK_MISMATCH / UNCERTAIN | 返回对应环节
+R4.6.01 | 当前适合哪一级迁移？ | T1 / T2 / T3 | 生成相应迁移任务
+R4.6.02 | 迁移表现？ | SUCCESS / PARTIAL / FAILED / INSUFFICIENT_EVIDENCE | 升级 / 最小支架 / 回退 / 补证据
+R4.6.03 | 迁移失败来源？ | PRINCIPLE_NOT_UNDERSTOOD / STRATEGY_RIGID / CONTEXT_MISREAD / DISTANCE_TOO_HIGH / UNCERTAIN | 回归解释、策略或降低跨度
+R4.6.04 | 是否进入初步教学探究路径？ | YES / NO | 进入Inquiry Extension Path / 进入SG4.7
+R4.7.01 | 阶段达成状态？ | ACHIEVED / PARTIALLY_ACHIEVED / INSUFFICIENT_EVIDENCE | 完成 / 定位补弱 / 补证据
+
+## TABLE 14
+等级 | 含义 | 允许动作
+R0 自主反思 | AI不提供反思内容提示 | 仅呈现证据与任务要求。
+R1 证据提醒 | 帮助重新注意原始证据 | “请再看这一段学生回应。”
+R2 定向反思追问 | 针对缺失维度推进反思 | “你的判断依据是什么？”“还有哪些可能解释？”
+R3 结构化反思脚本 | 长期无法推进时提供结构 | 事实 → 评价 → 依据 → 替代 → 自我关联 → 策略。
+
+## TABLE 15
+反思维度 | 关注点
+描述 | 是否准确呈现关键教学事实。
+评价 | 是否对教师行为、学生响应或教学结果作出专业判断。
+论证 | 是否使用课堂证据、专业知识或经验支持判断。
+替代方案 | 是否能提出其他解释或行动选择。
+自我关联 | 是否联系自身实践、习惯、判断和专业成长。
+
+## TABLE 16
+使用规则  五维反思采用“覆盖与适切性”而非机械全覆盖：系统判断不同维度在本次反思中是否必要、是否出现、是否与问题相适切。SOLO仅用于辅助描述内容结构，不作为唯一或正式反思能力等级。
+
+## TABLE 17
+辅助结构层级 | 项目解释
+PRESTRUCTURAL | 未形成与问题相关的有效结构。
+UNISTRUCTURAL | 只抓住一个因素。
+MULTISTRUCTURAL | 能列出多个因素，但关系松散。
+RELATIONAL | 能建立多个因素的关系并形成整体解释。
+EXTENDED_ABSTRACT | 能抽象较一般的专业原则，并用于新情境。
+
+## TABLE 18
+层级 | 定义 | 典型变化
+T1 近变式 | 底层专业问题基本相同，仅少量表面条件改变。 | 换学生、换题例。
+T2 结构迁移 | 表面条件变化明显，但深层专业结构相似。 | 从“答案错误”变为“答案对但理由错”。
+T3 复杂新情境 | 多个内容/情境维度同时改变，且支架明显减少。 | 多学生、多观点、时间压力、新内容。
+
+## TABLE 19
+定位说明  T1/T2/T3是本项目业务操作分级，用于组织迁移训练和控制任务跨度；不声称为现有文献中的统一标准化迁移量表。迁移判定应同时考虑结构识别、情境敏感性、灵活调整、策略匹配、结果适切性、自主解释和AI支架水平。
+
+## TABLE 20
+Evidence ID | 成长证据 | 来源 | 主要反映能力
+E4-01 | 反思任务基线 | SG4.1 | 任务背景与目标
+E4-02 | 原始成长证据集合 | SG4.1 | 证据基础
+E4-03 | 关键事实描述 | SG4.2 | 事实识别
+E4-04 | 教学评价记录 | SG4.2 | 专业判断
+E4-05 | 自主问题发现 | SG4.2 | 自主反思
+E4-06 | 问题—证据关联 | SG4.2 | 证据意识
+E4-07 | 初步专业解释 | SG4.3 | 可能原因/专业解释
+E4-08 | 支持证据 | SG4.3 | 证据化推理
+E4-09 | 竞争性解释 | SG4.3 | 开放性与复杂推理
+E4-10 | 解释比较轨迹 | SG4.3 | 专业判断修正
+E4-11 | 自我关联 | SG4.3 | 自我反思
+E4-12 | 反思过程维度记录 | SG4.2—4.4 | 反思维度覆盖与适切性
+E4-13 | SOLO辅助结构记录 | SG4.2—4.4 | 结构化程度辅助分析
+E4-14 | 替代行动方案 | SG4.4 | 策略生成
+E4-15 | 策略选择理由 | SG4.4 | 专业决策
+E4-16 | 预期学生结果 | SG4.4 | 策略预测
+E4-17 | 验证证据计划 | SG4.4 | 证据规划
+E4-18 | 策略实践执行记录 | SG4.5 | 改进行动
+E4-19 | 策略验证结果 | SG4.5 | 实践证据支持程度
+E4-20 | TeacherStrategyEffectRecord | SG4.5 | RSI教师策略效果
+E4-21 | TransferDistanceProfile | SG4.6 | 迁移距离基线
+E4-22 | 迁移任务表现 | SG4.6 | 新情境应用
+E4-23 | 情境敏感性证据 | SG4.6 | 适应性
+E4-24 | 策略调整记录 | SG4.6 | 灵活性
+E4-25 | 迁移解释 | SG4.6 | 深层理解
+E4-26 | AI反思支架轨迹 | 全阶段 | 独立性
+E4-27 | 自主恢复/纠错记录 | 全阶段 | 自我调节
+E4-28 | 实践问题→探究问题 | SG4.6 | 初步研究能力
+E4-29 | 基本证据采集计划 | SG4.6 | 研究方法意识
+E4-30 | TeachingInquiryRecord | SG4.6 | 实践探究
+E4-31 | 阶段达成证据 | SG4.7 | 综合成长
+E4-32 | NextGrowthProposal | SG4.7 | 后续成长方向
+
+## TABLE 21
+Tool ID | Tool | 作用
+T4-01 | get_growth_profile_snapshot | 获取当前成长画像快照
+T4-02 | get_stage3_evidence_package | 获取阶段3成长证据包
+T4-03 | get_reflection_history | 查询历史反思记录
+T4-04 | get_evaluation_results | 查询已有评价结果
+T4-05 | get_scaffold_history | 获取AI支架使用轨迹
+T4-06 | append_growth_evidence | 保存结构化成长证据
+
+## TABLE 22
+Tool ID | Tool | 作用
+T4-07 | retrieve_evidence_segment | 根据引用读取课堂/文本/视频证据
+T4-08 | extract_reflection_statement | 抽取师范生反思语义单元
+T4-09 | classify_reflection_dimension | 分类为描述/评价/论证/替代/自我关联
+T4-10 | link_reflection_to_evidence | 建立反思陈述与原始证据关联
+T4-11 | check_evidence_consistency | 检查陈述与证据是否一致
+T4-12 | detect_self_reference | 识别是否联系自身实践
+T4-13 | analyze_reflection_structure | 辅助判断SOLO结构特征
+T4-14 | calculate_reflection_dimension_coverage | 统计反思维度覆盖与适切性候选证据
+
+## TABLE 23
+Tool ID | Tool | 作用
+T4-15 | extract_problem_statement | 结构化自主发现的问题
+T4-16 | extract_explanation_candidates | 抽取师范生提出的可能解释
+T4-17 | retrieve_relevant_professional_knowledge | 检索教育学/PCK等专业知识
+T4-18 | generate_counterexample_prompt | 生成反例问题或竞争解释提示
+T4-19 | extract_alternative_actions | 抽取替代行动
+T4-20 | compare_strategy_candidates | 按结构化条件比较策略候选
+T4-21 | check_strategy_explanation_alignment | 检查策略与解释一致性
+T4-22 | structure_validation_evidence_plan | 结构化验证证据计划
+
+## TABLE 24
+Tool ID | Tool | 作用
+T4-23 | generate_evidence_reminder | 生成R1证据提醒
+T4-24 | generate_reflective_question | 按缺失维度生成R2反思追问
+T4-25 | generate_structured_reflection_script | 生成R3结构化反思脚本
+T4-26 | record_reflection_scaffold | 保存一次反思支架记录
+T4-27 | compare_pre_post_scaffold_response | 比较支架前后自主表现
+
+## TABLE 25
+Tool ID | Tool | 作用
+T4-28 | build_validation_task_config | 将策略转为实践验证任务配置
+T4-29 | compare_target_behavior_before_after | 比较目标行为前后变化
+T4-30 | compare_student_response_before_after | 比较学生响应变化
+T4-31 | assess_strategy_support_level | 输出SUPPORTED等候选状态
+T4-32 | save_teacher_strategy_effect | 保存TeacherStrategyEffectRecord
+
+## TABLE 26
+Tool ID | Tool | 作用
+T4-33 | extract_transfer_principle | 提取已验证策略的适用原则
+T4-34 | build_transfer_distance_profile | 形成迁移距离画像
+T4-35 | generate_transfer_task_variant | 按T1/T2/T3生成任务候选
+T4-36 | compare_source_target_context | 比较原情境与迁移情境差异
+T4-37 | extract_context_adaptation | 识别如何按情境调整策略
+T4-38 | assess_transfer_evidence | 结构化迁移表现证据
+T4-39 | record_transfer_result | 保存迁移结果
+
+## TABLE 27
+Tool ID | Tool | 作用
+T4-40 | structure_inquiry_question | 将实践问题结构化为可探究问题
+T4-41 | build_basic_evidence_plan | 形成简单证据采集方案
+T4-42 | organize_inquiry_evidence | 整理实践探究证据
+T4-43 | summarize_evidence_patterns | 提取基本数据/证据模式
+T4-44 | structure_practical_conclusion | 结构化实践解释与结论
+T4-45 | generate_next_inquiry_question | 形成下一探究问题
+T4-46 | save_teaching_inquiry_record | 保存TeachingInquiryRecord
+
+## TABLE 28
+开发边界  模拟教学本身不作为WF4工具；SG4.5和SG4.6通过调用已有模拟教学/实践执行Workflow获得新实践轨迹和学生响应证据。T4-09、T4-13、T4-31等工具只生成候选证据或建议状态，不能单独决定阶段通过与否。
+
+## TABLE 29
+包内结构 | 包含内容
+01 Reflection Baseline | 反思对象、成长目标、证据范围与任务约束。
+02 Autonomous Problem Discovery | 自主发现的问题、关联证据与支架使用。
+03 Reflection Process Evidence | 描述、评价、论证、替代方案、自我关联等反思过程证据及其适切性。
+04 Professional Explanation Evidence | 初步解释、支持证据、竞争性解释、比较推理与最终专业解释。
+05 Strategy Evidence | 替代行动、选定策略、选择理由、预期结果与验证计划。
+06 Strategy Validation Evidence | 策略实践轨迹、前后比较、证据支持程度及TeacherStrategyEffectRecord。
+07 Transfer Evidence | TransferDistanceProfile、情境调整、迁移表现、迁移解释与结果。
+08 Autonomy Evidence | R0-R3历史、求助、自治纠错和AI依赖变化。
+09 Initial Teaching Inquiry Evidence | 实践问题、可探究问题、基本证据计划及可选TeachingInquiryRecord。
+10 NextGrowthProposal | 下一轮成长方向、建议任务和需补充的证据。
+
+## TABLE 30
+正式评价与业务判定的边界  SG4.7仅基于上述证据作“本阶段是否继续、补弱或完成”的业务达成判定。最终评分、量规评价与导师复核由公共多源评价Workflow承担，避免形成两个重复的评价系统。
+
+## TABLE 31
+阶段/接口 | 职责与数据流
+任务3：会实施与判断 | 课堂实施、教学事件处理、专业判断、回放复盘、即时再教学、支架使用等。
+任务3主要输出 | TeachingJudgmentEvidencePackage；其中包括JudgmentRecord、ReplayResult、ImprovementEvidence、ScaffoldHistory等。
+任务4：会反思与迁移 | 自主发现问题 → 证据化专业解释 → 自主策略 → 实践验证 → 新情境迁移 → 初步探究。
+任务4主要输出 | ReflectionTransferEvidencePackage + NextGrowthProposal。
+系统后续调用 | 公共多源评价Workflow → RSI策略效果记录Workflow → 成长画像更新Workflow → Teacher Growth Agent / Orchestrator。
+
+## TABLE 32
+维度 | 任务3 会实施与判断 | 任务4 会反思与迁移
+问题来源 | 当前模拟课堂 | 多源、多轮成长证据
+问题发现 | 系统可辅助定位关键片段 | 师范生自主发现
+反思深度 | 当前课堂怎样即时调整 | 为什么出现、依据是什么、如何自主改进
+专业解释 | 实践性解释即可 | 证据化专业解释与竞争性解释比较
+策略 | 当前课堂改进行动 | 自主形成、选择、说明并验证策略
+实践 | 同情境或近变式再教学 | 调用实践执行Workflow完成策略验证与迁移挑战
+迁移 | 不作为核心达成目标 | T1近变式 → T2结构迁移 → T3复杂新情境
+AI角色 | 情境助教/动态支架 | 反思教练/成长伙伴，逐步退隐
+最终能力 | 会实施、会判断、会即时调整 | 会自我改进、会迁移、会自主成长
+
+## TABLE 33
+最终交接结论  WF4已冻结为“证据—自主发现—专业解释—策略—验证—迁移—达成判定”的闭环。开发实现时应保持业务路由的可解释性、状态枚举的有限性、循环预算的可控性，以及工具与Workflow职责的清晰分离。

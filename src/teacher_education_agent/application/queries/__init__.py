@@ -1,0 +1,2 @@
+"""application/queries package placeholder."""
+

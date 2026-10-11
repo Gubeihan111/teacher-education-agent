@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_DB: teacher_agent
+      POSTGRES_USER: teacher_agent
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teacher_agent -d teacher_agent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  funasr:
+    build: {context: ., dockerfile: deploy/funasr/Dockerfile}
+    environment: ["FUNASR_MODEL=${FUNASR_MODEL:-iic/SenseVoiceSmall}"]
+    ports: ["8001:8001"]
+  api:
+    build: {context: ., dockerfile: deploy/api/Dockerfile}
+    env_file: [.env]
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      funasr: {condition: service_started}
+volumes:
+  postgres_data: {}

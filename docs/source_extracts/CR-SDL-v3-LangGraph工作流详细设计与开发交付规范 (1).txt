@@ -1,0 +1,1433 @@
+# CR-SDL-v3-LangGraph工作流详细设计与开发交付规范 (1).docx
+CR-SDL v3
+LangGraph 工作流详细设计与开发交付规范
+基于认知冲突动态调节的自我导向学习系统
+目录
+提示：正文采用 Word Heading 1—3 真实标题样式，可在 Word“导航窗格”中直接跳转；如需自动页码目录，可在交付系统中统一插入并更新域。
+执行摘要
+本工作流将学习者可感知的“自主确立目标—自主提出问题—自主发起追问—自主解决问题”作为推进主线，将自我调节作为贯穿计划、执行、监控、评价和反思的内层循环。认知冲突不是前置条件或并列阶段，而是在正式学习开始且学习者产生有效学习证据后才进入的条件子图。
+外层六阶段正式定义为：①情境定向与需要诊断；②自主确立目标；③自主提出问题与制定计划；④自主探究、追问与解决；⑤成果验证与迁移；⑥反思调节与新一轮学习。阶段名称属于业务契约，代码中的 phase 枚举、路由、监控看板与验收用例必须保持同一语义。
+1. 基本信息
+2. 目标、价值与边界
+2.1 业务目标
+引导学习者完成从学习需要诊断、二维目标确立、问题树规划到探究、验证、迁移和反思的完整闭环。
+在有效学习证据出现后识别三层八类认知冲突，依据CCI最优区间动态选择支架并复评。
+形成可解释的目标契约、问题树、学习证据、冲突片段、调节记录、验证报告和学习档案。
+支持断线恢复、重复提交、依赖故障、并发冲突、版本迁移、灰度回滚与人工接管。
+2.2 完成定义
+2.3 明确非目标
+本图不替代身份认证、内容资源治理、通用知识库建设、冲突模型训练、资源推荐算法、计费或外部通知系统；不以CCI直接评价学习能力或学习成绩；不自动把教师预警发送给外部人员。
+3. 参与者、权限与责任
+4. 触发、前置、拒绝与终态
+5. 输入与输出契约
+5.1 InputState
+5.2 OutputState
+6. InternalState 与数据字典
+State 只保存运行所需的小型值、摘要和业务实体引用。数据库连接、SDK、ORM对象、大文件、完整知识库、密钥及无必要敏感信息由 RuntimeContext 或外部存储管理。并行追加字段使用显式 Reducer。
+6.1 标识、控制与预算
+6.2 学习情境与二维目标
+6.3 问题树、计划与资源
+6.4 证据、探究与进展
+6.5 冲突、调节与预警
+6.6 验证、反思与结果
+6.7 RuntimeContext（不进入Checkpoint）
+7. 图结构、子图、边与循环
+7.1 主流程
+创建/恢复→情境与需要诊断→Bloom×SOLO二维目标→问题树与学习契约→子问题探究循环→成果验证与迁移→反思与总体目标判断→完成或新循环。
+每个确认点使用interrupt并保存checkpoint；恢复沿用原thread_id。
+正式学习后，每次有效证据事件先经过确定性资格路由，再决定是否进入冲突子图。
+7.1.1 主图（图形版）
+图形版面向业务评审与开发联调阅读；实线表示主推进方向，回路表示学习者修改、继续探究、补救或开启新一轮。
+图7-1　基于认知冲突动态调节的自我导向学习主流程
+7.1.2 主图 Mermaid 交付源
+7.2 认知冲突调节子图
+本子图不是外层学习阶段。只有 session_status=active、目标与学习契约已确认、正式学习已开始、学习者证据有效且事件类型可触发时，才允许进入。
+7.2.1 子图（图形版）
+图7-2　认知冲突识别、量化、调节、复评与预警子图
+7.2.2 认知冲突子图 Mermaid 交付源
+7.3 循环与上限
+7.4 并行
+来源核验可按主张并行，资源候选可按来源并行，模型/规则评价可并行形成候选；所有分支写入独立键或使用append reducer，由显式汇合节点处理部分失败。目标确认、CCI计算、最终完成和业务事务提交不得并行竞写。
+8. 节点详细规格
+本章共定义 52 个节点。节点按单一职责、失败边界、重试边界和人工确认点拆分；纯路由函数不伪装成节点。
+8.1 initialize_session｜初始化学习会话
+8.2 load_learning_context｜加载学习情境
+8.3 diagnose_readiness｜诊断学习需要与起点
+8.4 elicit_goal｜征集初步目标
+8.5 identify_knowledge_object｜识别知识对象
+8.6 assess_goal_levels｜判断 Bloom 与 SOLO 起点
+8.7 propose_goal_path｜形成二维目标与进阶路径
+8.8 confirm_goal｜确认目标层级与证据
+8.9 persist_goal_contract｜固化目标契约
+8.10 elicit_question｜征集核心问题
+8.11 assess_question_quality｜评价问题质量
+8.12 build_question_tree｜构建问题树
+8.13 confirm_question_tree｜确认问题树
+8.14 plan_learning｜制定学习策略与节奏
+8.15 recommend_resources｜推荐候选资源
+8.16 confirm_learning_contract｜确认学习契约
+8.17 persist_learning_contract｜固化学习契约
+8.18 select_subquestion｜选择当前子问题
+8.19 capture_initial_evidence｜收集先行尝试
+8.20 validate_evidence｜校验学习证据
+8.21 provide_feedback｜提供材料、案例或不同观点
+8.22 capture_analysis_response｜收集比较与核验
+8.23 run_conflict_subgraph｜调用认知冲突子图
+8.24 collect_self_judgment｜收集学习者自我判断
+8.25 elicit_followup｜引导自主追问
+8.26 adjust_learning_path｜调整策略或资源
+8.27 record_tentative_solution｜记录子问题暂定解
+8.28 integrate_viewpoint｜整合学习者观点
+8.29 detect_conflict｜识别认知冲突
+8.30 classify_conflict｜分类三层八类
+8.31 calculate_cci｜计算 CCI
+8.32 select_regulation_strategy｜选择调节策略
+8.33 generate_scaffold｜生成个性化支架
+8.34 capture_post_regulation｜收集调节后证据
+8.35 reassess_conflict｜复评冲突与进展
+8.36 evaluate_warning｜评估预警
+8.37 persist_conflict_episode｜记录冲突片段
+8.38 verify_sources｜核验事实与来源
+8.39 request_self_explanation｜请求自我解释
+8.40 evaluate_self_explanation｜评价解释证据
+8.41 generate_transfer_task｜生成迁移/变式任务
+8.42 evaluate_transfer｜评价迁移表现
+8.43 evaluate_stage_goal｜评价阶段目标
+8.44 collect_reflection｜收集阶段反思与归因
+8.45 update_self_efficacy｜更新自我效能摘要
+8.46 update_learner_profile｜更新长期学习画像
+8.47 evaluate_overall_goal｜评价总体目标
+8.48 complete_session｜完成会话
+8.49 pause_or_manual_help｜暂停与人工帮助
+8.50 finalize_cancelled｜取消会话
+8.51 finalize_expired｜处理等待过期
+8.52 finalize_failed｜稳定失败终结
+9. 路由表与有限枚举
+10. Interrupt 与恢复协议
+恢复规则：必须沿用原 thread_id；服务端验证 actor/tenant/role、interrupt_id、interrupt_version、entity_version 和 submission_id。interrupt 节点会从头重放，因此中断前不执行不可重复副作用；确认后的写入在独立持久化节点完成。
+11. Tool、模型与结构化输出
+所有模型记录 provider/model、model_version、prompt_version、schema_version、token、latency、validation_result、fallback_used；结构化输出先Pydantic校验，再业务不变量校验。失败顺序：有限重试→解析修复→规则/备用实现→转人工或稳定失败。
+12. Checkpoint、业务数据、长期记忆与审计
+thread_id与learning_session_id建立服务端映射，但不作为授权凭证。State只保存引用与必要快照；业务库为权威副本。删除请求需覆盖业务事实中可删除部分、Checkpoint、对象存储和长期记忆，并保留法律/审计允许的最小匿名事件。
+13. 可靠性：幂等、事务、并发、重放与补偿
+14. 安全、权限与数据治理
+15. 可观测性、指标与告警
+技术指标与教育业务指标分开展示；任何模型准确率、CCI或使用时长不得单独解释为学习质量。可观测性事件使用版本化Schema，并支持按session重建关键决策链。
+16. 测试、版本、发布与验收
+16.1 量化上线门槛
+16.2 版本迁移与回滚
+workflow_version控制行为，state_schema_version控制状态结构，prompt/model/tool独立版本化。v3旧State迁移到v4时新增Bloom/SOLO字段默认为unknown并进入学习者确认，不根据历史文本静默猜测。恢复旧thread优先固定旧图；只有显式迁移函数和回归测试通过后才迁移。发布使用feature flag按租户/用户灰度，保留v2图注册和数据库向后兼容，回滚不删除v3已生成的权威业务事实。
+附录A 开发人员必须提交的代码包
+附录B 核心枚举与错误码
+附录C 评审检查表
+□ 业务目标与完成条件可验证；完成、等待、失败、取消、过期已分开。
+□ State字段有类型、来源、主写者、生命周期、持久化、默认与迁移说明。
+□ Bloom与SOLO分别记录，不映射为单一总分；目标和证据由学习者确认。
+□ 认知冲突只在正式学习与有效学习者证据后触发；目标阶段调用次数为0。
+□ 三层八类、CCI双阈值、ΔCCI、持续轮次和先调节后预警规则完整。
+□ 每个节点职责单一，读写、前置、依赖、副作用、幂等、重试、降级和测试齐全。
+□ 路由使用有限枚举和确定性规则；循环具备退出条件与硬上限。
+□ interrupt具备完整resume Schema、thread_id、过期、重复提交与审计协议。
+□ Checkpoint未被当作业务数据库；大对象和敏感数据未进入State。
+□ 副作用节点具备幂等键、事务/Outbox、乐观锁和重放保护。
+□ 安全、权限、模型脱敏、Tool白名单、预算和内容安全已设计。
+□ 测试覆盖恢复、重放、并发、迁移、灰度、回滚和教育业务不变量。
+附录D 实施顺序
+先冻结 specification、State、枚举、错误码和路由表；禁止先写Prompt。
+实现纯Policy与Route，并完成全部单元测试。
+实现Repository/Tool/Model端口和Fake；完成节点测试。
+组装目标、问题、探究、冲突、验证反思子图；完成路径测试。
+接入PostgreSQL Checkpointer、业务表、Outbox与审计；验证恢复和重放。
+接入WF01与resource_recommendation_v1适配器，不复制内部算法。
+接入模型与Prompt版本；运行安全、负载、灰度和回滚演练。
+教育领域专家验收Bloom×SOLO、冲突策略、学习者主体性和结果证据后进入pilot。
+文档结束
+
+## TABLE 1
+文档定位：面向产品、教育领域专家、架构师、后端开发、测试与运维人员的上线级规格。本文以已确认的 CR-SDL v3 业务流程为唯一业务基线，按《LangGraph工作流设计规范与交付模板》逐项展开。
+
+## TABLE 2
+项目 | 内容
+workflow_id | conflict_regulated_self_directed_learning
+行为版本 | 3.0.0
+State Schema | 4
+文档版本 | 1.1｜2026-09-08｜新增主图与认知冲突子图图形版
+状态 | draft → architecture review
+适用场景 | 教师职业发展及师范生自我导向学习；可扩展至其他学习者
+
+## TABLE 3
+章节 | 内容
+执行摘要 | 双层理论框架、核心不变量与总体结构
+1 | 基本信息
+2 | 目标、价值与边界
+3 | 参与者、权限与责任
+4 | 触发、前置、拒绝与终态
+5 | 输入与输出契约
+6 | InternalState 与数据字典
+7 | 图结构、子图、边与循环
+8 | 52个节点详细规格
+9 | 路由表与有限枚举
+10 | Interrupt 与恢复协议
+11 | Tool、模型与结构化输出
+12 | Checkpoint、业务数据、长期记忆与审计
+13 | 幂等、事务、并发、重放与补偿
+14 | 安全、权限与数据治理
+15 | 可观测性、指标与告警
+16 | 测试、版本、发布与验收
+附录A-D | 代码交付包、枚举错误码、评审表与实施顺序
+
+## TABLE 4
+不可破坏的业务不变量：学习者拥有目标、问题、策略、资源、证据、结论与结束决定权；任何模型、CCI、分类结果或推荐均不得越权替代学习者确认。目标和起点问题阶段不执行冲突检测、CCI计算或预警。
+
+## TABLE 5
+设计层 | 结构 | 职责
+外层 SDL | 情境/需要诊断→目标→问题与计划→探究→验证迁移→反思新循环 | 决定学什么、为何学、如何学、何时完成
+内层 SRL | 计划→执行→监控→评价→调整 | 每个子问题内持续调节
+冲突机制 | 资格校验→识别→三层八类→CCI→支架→复评→预警 | 只调节支架强度与预警
+可靠性旁路 | 暂停/恢复、人工帮助、取消、过期、失败 | 保证长流程可恢复且无重复副作用
+
+## TABLE 6
+字段 | 设计值 | 说明
+workflow_id | conflict_regulated_self_directed_learning | 稳定机器标识
+display_name | 基于认知冲突调节的自我导向学习 | 面向业务人员
+workflow_version | 3.0.0 | 行为语义版本
+state_schema_version | 4 | 加入 Bloom×SOLO、冲突复评与验证证据字段
+owner | 产品负责人 / 教育领域专家 / LangGraph技术负责人 | 上线前替换为真实姓名
+status | draft | 评审通过后依次进入 pilot、active
+feature_flag | wf.cr_sdl_v3.enabled | 支持灰度与v2回退
+entrypoints | POST /api/v1/learning/sessions；POST /.../{id}/resume；父图 route=learning | 入口与恢复分开
+actors | 学习者、教师/人工支持、系统服务 | 教师预警首阶段只形成系统内记录
+goal | 形成经证据验证、可迁移、可反思的学习结果及完整调节记录 | 可审计、可恢复
+non_goals | 账户认证、计费、基础模型训练、资源推荐内部算法、WF01内部教学算法 | 通过适配器复用现有能力
+
+## TABLE 7
+条件 | 可判定规则
+目标契约 | goal_contract_ref存在且学习者已确认 Bloom/SOLO 起点、目标和成功证据
+问题解决 | 所有必需子问题至少形成一版暂定解并保留证据与不确定点
+结果验证 | 来源核验完成；Bloom与SOLO分别有证据；要求迁移时transfer_result通过或被学习者明确接受为未达成
+主体确认 | overall_decision=complete，由学习者有效resume提交
+持久化 | 学习档案与完成事件在同一事务/Outbox语义下成功写入
+
+## TABLE 8
+参与者 | 允许动作 | 禁止动作 | 审批/确认责任
+学习者 | 提出/修改目标与问题；选择策略资源；提交证据；暂停、求助、取消；确认结论 | 覆盖租户/身份；修改审计记录；把AI文本冒充本人证据 | 确认目标、问题树、学习契约、自我判断和最终完成
+教师/人工支持 | 查看被授权的求助和系统内预警；补充指导；标记已处理 | 未经授权查看其他学习者；替学习者确认目标或完成 | 只对人工支持事项负责，不替代学习者决定
+工作流服务 | 确定性路由、状态校验、checkpoint、审计与策略执行 | 根据自然语言任意跳节点；静默更改目标 | 保证不变量、授权、幂等和恢复
+模型服务 | 抽取、生成候选、语义评价、解释与支架生成 | 身份授权、租户判断、事务提交、最终完成判定 | 输出必须通过Schema和规则校验
+领域服务 | 冲突检测/分类、CCI、资源推荐、证据与画像存储 | 越权决定下一阶段 | 按稳定契约返回结果和错误码
+
+## TABLE 9
+类别 | 布尔规则/事件 | 布尔规则/事件 | 数据来源
+新建会话 | authenticated=true AND tenant_active=true AND task_ref可访问 AND feature_flag=true | authenticated=true AND tenant_active=true AND task_ref可访问 AND feature_flag=true | 认证上下文、租户服务、任务库、配置中心
+恢复会话 | thread_id有效 AND actor已授权 AND status=waiting AND resume_schema有效 AND interrupt_version匹配 | thread_id有效 AND actor已授权 AND status=waiting AND resume_schema有效 AND interrupt_version匹配 | Checkpointer、会话库、认证上下文
+冲突子图 | status=running AND goal_confirmed AND question_plan_confirmed AND learning_started AND learner_evidence_valid AND event_type∈eligible | status=running AND goal_confirmed AND question_plan_confirmed AND learning_started AND learner_evidence_valid AND event_type∈eligible | State与证据事件
+禁止冲突 | phase∈{orientation,goal_planning,question_planning} OR event为登录/页面/控制/技术错误/纯AI内容 | phase∈{orientation,goal_planning,question_planning} OR event为登录/页面/控制/技术错误/纯AI内容 | phase与event_type
+拒绝 | 跨租户、任务关闭/无权、输入超限、旧resume版本、会话已终结 | 跨租户、任务关闭/无权、输入超限、旧resume版本、会话已终结 | 授权、业务库、Schema
+终态 | 定义 | 输出要求 | 输出要求
+completed | 业务目标与证据条件达成，学习者确认完成 | portfolio_ref、goal_outcome、warnings、completed_at | portfolio_ref、goal_outcome、warnings、completed_at
+waiting | 等待学习者或人工支持 | interrupt_id、display_payload、allowed_actions、thread_id、expires_at | interrupt_id、display_payload、allowed_actions、thread_id、expires_at
+failed | 不可继续 | stable error_code、recoverable、support_ref；不泄露内部堆栈 | stable error_code、recoverable、support_ref；不泄露内部堆栈
+cancelled | 用户/系统主动终止 | 保留已发生事实，不物理回滚学习记录 | 保留已发生事实，不物理回滚学习记录
+expired | 等待超过绝对时限 | 不得默认批准；返回可新建/恢复策略 | 不得默认批准；返回可新建/恢复策略
+
+## TABLE 10
+字段 | 类型 | 来源 | 约束
+tenant_id | str | 可信认证上下文 | 必填；请求体同名字段忽略
+actor_id | str | 可信认证上下文 | 必填
+task_ref | str | 请求或父图 | 新建会话必填；只允许引用有权任务
+client_request_id | UUID | 客户端 | 创建幂等键组成部分
+entry_message | str|None | 学习者 | ≤4000字符；脱敏后送模
+thread_id | str|None | 服务端先前返回 | 仅恢复入口使用
+resume | ResumeEnvelope|None | 恢复请求 | action/payload/interrupt_id/version
+locale | str | 客户端/用户设置 | 默认zh-CN
+
+## TABLE 11
+字段 | 类型 | 公开语义
+workflow_id/version | str | 始终返回
+session_id/thread_id | str | 授权后的不透明ID
+status | enum | running/waiting/completed/failed/cancelled/expired
+phase | enum | 当前业务阶段
+next_action | enum|None | 有限枚举，不返回任意节点名
+display | DisplayPayload|None | 面向前端的安全载荷
+result_refs | list[str] | 稳定业务结果引用
+goal_outcome | GoalOutcome|None | Bloom/SOLO证据分开
+warnings | list[Warning] | 可公开、已脱敏
+error | PublicError|None | 稳定码、可恢复性、支持引用
+class ResumeEnvelope(BaseModel): /     interrupt_id: str /     interrupt_version: int /     action: Literal["approve", "revise", "respond", "pause", "help", "cancel"] /     payload: dict /     submission_id: UUID /     expected_entity_version: int | None = None | class ResumeEnvelope(BaseModel): /     interrupt_id: str /     interrupt_version: int /     action: Literal["approve", "revise", "respond", "pause", "help", "cancel"] /     payload: dict /     submission_id: UUID /     expected_entity_version: int | None = None | class ResumeEnvelope(BaseModel): /     interrupt_id: str /     interrupt_version: int /     action: Literal["approve", "revise", "respond", "pause", "help", "cancel"] /     payload: dict /     submission_id: UUID /     expected_entity_version: int | None = None
+
+## TABLE 12
+字段/类型 | 主写节点 | 生命周期/持久化 | 默认/约束
+workflow_id / str | initialize_session | 全thread/Checkpoint | 固定
+workflow_version / str | initialize_session | 全thread/Checkpoint | 3.0.0
+state_schema_version / int | initialize_session/migration | 全thread/Checkpoint | 4
+session_id / str | initialize_session | 业务库+Checkpoint | 不可猜测
+thread_id / str | initialize_session | Checkpointer | 不可作授权依据
+run_id / str | runtime | 本run/日志 | 每次invoke新建
+phase / Phase | 各阶段提交节点 | Checkpoint | 有限枚举
+status / Status | 路由/终结节点 | Checkpoint+业务库 | running
+route / Route|None | 纯路由函数 | 本run/Checkpoint | None
+round_index / int | select_subquestion | Checkpoint | 0；每轮+1
+regulation_round / int | 冲突子图 | Checkpoint | 0；最大3
+model_budget_used / int | 模型节点Reducer | Checkpoint | 0；按策略上限
+warnings / list[Warning] | 各节点 append reducer | Checkpoint | []
+error_code / str|None | 失败节点 | Checkpoint | None
+
+## TABLE 13
+字段/类型 | 主写节点 | 生命周期/持久化 | 默认/约束
+task_ref / str | Input | Checkpoint | 必填
+task_snapshot_ref / str | load_context | 业务库引用 | 
+learning_need_summary / NeedSummary | diagnose_readiness | Checkpoint | 
+readiness_snapshot / Readiness | diagnose_readiness | Checkpoint | 
+knowledge_objects / list[KnowledgeObject] | identify_knowledge_object | Checkpoint | 1—5项
+bloom_start / BloomLevel|unknown | assess_goal_levels | Checkpoint+目标库 | B1—B6
+bloom_target / BloomLevel | confirm_goal | 目标库+Checkpoint | 学习者确认
+solo_start / SoloLevel|unknown | assess_goal_levels | Checkpoint+目标库 | S0—S4
+solo_target / SoloLevel | confirm_goal | 目标库+Checkpoint | 学习者确认
+level_evidence_refs / list[str] | assess_goal_levels | 证据库引用 | []
+milestones / list[Milestone] | propose_goal_path | 目标库 | 
+success_criteria / list[Criterion] | propose/confirm_goal | 目标库 | 
+goal_contract_ref / str|None | persist_goal_contract | 业务库引用 | None
+goal_version / int | persist_goal_contract | 目标库/Checkpoint | 乐观锁
+
+## TABLE 14
+字段/类型 | 主写节点 | 生命周期/持久化 | 默认/约束
+starting_question / str | confirm_question_tree | 问题库 | 
+question_quality / QuestionQuality | assess_question_quality | Checkpoint | 
+question_tree_ref / str|None | confirm_question_tree | 业务库引用 | 
+question_tree_snapshot / QuestionTree | build/confirm | Checkpoint | 小型快照
+current_subquestion_id / str|None | select_subquestion | Checkpoint | 
+subquestion_statuses / dict[str,enum] | record/evaluate | Checkpoint | Reducer按key更新
+strategy_plan / StrategyPlan | plan_learning | 契约库+Checkpoint | 
+resource_candidate_refs / list[str] | recommend_resources | Checkpoint | 资源引用
+learning_contract_ref / str|None | persist_learning_contract | 业务库引用 | 
+learning_started / bool | persist_learning_contract | Checkpoint | False
+
+## TABLE 15
+字段/类型 | 主写节点 | 生命周期/持久化 | 默认/约束
+learner_evidence_ref / str|None | capture_initial_evidence | 证据库引用 | 
+learner_evidence_valid / bool | validate_evidence | Checkpoint | False
+feedback_ref / str|None | provide_feedback | 内容库引用 | 
+analysis_evidence_ref / str|None | capture_analysis_response | 证据库引用 | 
+event_type / EvidenceEventType | capture/validator | Checkpoint | 
+self_judgment / SelfJudgment|None | collect_self_judgment | Checkpoint | 
+followup_question / str|None | elicit_followup | Checkpoint | 
+tentative_solution_refs / list[str] | record_tentative_solution | append reducer | []
+viewpoint_ref / str|None | integrate_viewpoint | 业务库引用 | 
+progress_snapshot / Progress | stage evaluator | Checkpoint | 
+
+## TABLE 16
+字段/类型 | 主写节点 | 生命周期/持久化 | 默认/约束
+conflict_eligible / bool | eligibility route | Checkpoint | False
+conflict_detected / bool|unknown | detect_conflict | Checkpoint | unknown
+conflict_layer / ConflictLayer|unknown | classify_conflict | 事件库 | 
+conflict_type / ConflictType|unknown | classify_conflict | 事件库 | 
+detection_confidence / float|None | model | 事件库 | 0—1
+cci_value / float|None | calculate_cci | 事件库 | 
+cci_band / CCIband|unknown | calculate_cci | Checkpoint | 
+cci_delta / float|None | calculate/reassess | 事件库 | 
+overload_streak / int | calculate/reassess | Checkpoint | 0
+regulation_strategy_id / str|None | select_strategy | 事件库 | 
+scaffold_ref / str|None | generate_scaffold | 内容库引用 | 
+conflict_episode_ref / str|None | persist_episode | 业务库引用 | 
+warning_level / WarningLevel | evaluate_warning | 业务库 | none
+teacher_alert_ref / str|None | persist_episode | 系统内记录 | 
+
+## TABLE 17
+字段/类型 | 主写节点 | 生命周期/持久化 | 默认/约束
+verification_report_ref / str|None | verify_sources | 业务库引用 | 
+self_explanation_ref / str|None | request_self_explanation | 证据库引用 | 
+bloom_evidence_result / LevelEvidence|None | evaluate_self_explanation | 评价库 | 
+solo_evidence_result / LevelEvidence|None | evaluate_self_explanation | 评价库 | 
+transfer_task_ref / str|None | generate_transfer_task | 任务库引用 | 
+transfer_result / Evaluation|None | evaluate_transfer | 评价库 | 
+stage_goal_status / enum | evaluate_stage_goal | Checkpoint | 
+reflection_ref / str|None | collect_reflection | 业务库引用 | 
+self_efficacy_delta / float|None | update_self_efficacy | 业务库 | 
+profile_update_ref / str|None | update_profile | 画像库引用 | 
+overall_goal_status / enum | evaluate_overall_goal | Checkpoint | 
+portfolio_ref / str|None | complete_session | 业务库引用 | 
+
+## TABLE 18
+依赖 | 职责
+AuthContext | 可信身份、租户、角色与动作授权
+Repositories | 会话、目标、问题、证据、冲突、画像与审计端口
+ModelGateway | 模型路由、结构化输出、预算、脱敏与观测
+ToolRegistry | 白名单Tool、Schema、超时与权限
+Clock/IdGenerator | 可测试时间与不可预测ID
+Checkpointer | 生产PostgreSQL实现；测试内存实现
+PolicyBundle | 路由、循环、CCI、预警、预算和内容安全策略版本
+
+## TABLE 19
+图分层：主图负责会话生命周期与阶段路由；目标计划、探究、冲突调节、验证反思分别作为稳定子图；公共旁路统一处理暂停、恢复、帮助和终态。父图只依赖子图稳定输出，不读取其全部内部字段。
+
+## TABLE 20
+图/子图 | 入口 | 稳定输出 | 版本
+cr_sdl_parent | InputState/ResumeEnvelope | OutputState、phase/status/result_refs | 3.0.0
+goal_planning | NeedSummary | goal_contract_ref、Bloom/SOLO起终点 | 2.0.0
+question_learning_plan | goal_contract_ref | question_tree_ref、learning_contract_ref | 2.0.0
+inquiry_problem_solving | learning_contract_ref | viewpoint_ref、evidence refs | 3.0.0
+conflict_regulation | eligible evidence envelope | conflict/regulation/warning summary | 3.0.0
+validation_reflection | viewpoint_ref + goal contract | goal outcome、profile update、portfolio | 2.0.0
+
+## TABLE 21
+flowchart TD /   A[创建或恢复学习会话] --> B[情境定向与需要诊断] /   B --> C[自主确立目标：Bloom × SOLO] /   C --> D{学习者确认目标？} /   D -->|修改| C /   D -->|确认| E[自主提出问题与制定计划] /   E --> F{起点问题与学习契约确认？} /   F -->|继续完善| E /   F -->|确认并开始正式学习| G[自主探究、追问与解决] /   G --> H[产生并校验有效学习者证据] /   H --> I{满足冲突检测资格？} /   I -->|否| G /   I -->|是| J[[认知冲突调节子图]] /   J --> K{当前子问题已解决？} /   K -->|否| G /   K -->|是| L{仍有待解决子问题？} /   L -->|有| G /   L -->|没有| M[成果验证与迁移] /   M --> N{目标达成？} /   N -->|未达成：修订或补救| G /   N -->|达成或接受当前结果| O[反思调节与新一轮学习] /   O --> P{学习者最终决定} /   P -->|新一轮| B /   P -->|暂停或人工帮助| Q[保存Checkpoint并等待恢复] /   Q --> O /   P -->|完成| R[生成学习档案并结束]
+
+## TABLE 22
+flowchart TD /   A[validate_conflict_eligibility] --> B{eligible} /   B -->|no| R[return_to_inquiry] /   B -->|yes| C[detect_conflict] /   C -->|none/low confidence| P[persist_conflict_episode] /   C -->|detected| D[classify_conflict] --> E[calculate_cci] /   E --> F[select_regulation_strategy] --> G[generate_scaffold] /   G --> H[capture_post_regulation] --> I[reassess_conflict] /   I --> J{suitable/progress?} /   J -->|yes| P /   J -->|no and under limit| F /   J -->|over limit/help/safety| K[evaluate_warning] --> P /   P --> R
+
+## TABLE 23
+循环 | 进入条件 | 退出条件 | 上限/超限
+目标修订 | 学习者revise/change_level | approve/cancel | 10次；转暂停/人工帮助
+问题树修订 | revise/add/remove/reorder | approve/cancel | 10次
+资源重推 | 学习者请求且候选不合适 | 接受/自选/跳过 | 3次；确定性降级
+子问题追问 | 未解决且选择继续 | 暂定解/换策略/求助 | 每子问题8轮
+冲突调节 | 复评仍异常 | 恢复适宜/推进/预警 | 每事件3轮
+阶段补救 | 成功证据不足 | 达成/停止/修改目标 | 每里程碑3次
+总体新循环 | 目标部分达成 | 完成/停止 | 每会话3个周期；可新建会话继续
+
+## TABLE 24
+字段 | 详细规格
+Node ID / 名称 | initialize_session / 初始化学习会话
+业务目的 | 建立可恢复 thread 与初始控制状态。
+输入 State 键 | InputState、RuntimeContext
+输出 State 键 | workflow/session/thread 标识、phase、status、预算计数器
+前置条件 | 身份、租户、task_ref 校验通过且去重键未冲突
+核心处理 | 生成不可猜测 thread_id，绑定 learning_session_id，装载默认政策。
+Domain / Tool / Model | 确定性 Domain Policy
+副作用 | 事务写 learning_sessions 与 outbox.session_created
+幂等键与唯一约束 | tenant_id + user_id + client_request_id 唯一
+超时与重试 | 数据库暂时错误最多2次，单次3s；并发冲突读取已存在会话
+降级与补偿 | 数据库不可用则 failed，不允许无持久化运行
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=initialize_session、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 25
+字段 | 详细规格
+Node ID / 名称 | load_learning_context / 加载学习情境
+业务目的 | 加载任务、历史画像摘要及可用资源范围。
+输入 State 键 | task_ref、learner_id、tenant_id
+输出 State 键 | task_snapshot、profile_summary_ref、context_constraints
+前置条件 | 会话 running 且资源授权通过
+核心处理 | 按 ID 读取必要快照；大对象只保留引用。
+Domain / Tool / Model | LearningContextRepository
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 读操作5s，暂时错误2次
+降级与补偿 | 画像不可用时使用空摘要并 warning；任务不可用则 failed
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=load_learning_context、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 26
+字段 | 详细规格
+Node ID / 名称 | diagnose_readiness / 诊断学习需要与起点
+业务目的 | 形成目标制定所需的需要、先备知识、动机与条件摘要。
+输入 State 键 | task_snapshot、profile_summary_ref、learner_message
+输出 State 键 | learning_need_summary、readiness_snapshot
+前置条件 | 正式学习尚未开始
+核心处理 | 结构化抽取学习需要；必要时通过 interrupt 请求简短起点作答。
+Domain / Tool / Model | ReadinessAssessor + LLM(prompt readiness.v1)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 模型失败使用规则模板收集四项信息，不触发 CCI
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=diagnose_readiness、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 27
+字段 | 详细规格
+Node ID / 名称 | elicit_goal / 征集初步目标
+业务目的 | 让学习者用自己的语言提出初步学习目标。
+输入 State 键 | learning_need_summary
+输出 State 键 | goal_draft_raw、status=waiting
+前置条件 | 不存在已确认 goal_contract
+核心处理 | interrupt 展示需要摘要，接收 propose/revise/cancel。
+Domain / Tool / Model | Interrupt GoalProposalV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 等待不设模型重试；默认7天过期
+降级与补偿 | 过期进入 finalize_expired
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=elicit_goal、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 28
+字段 | 详细规格
+Node ID / 名称 | identify_knowledge_object / 识别知识对象
+业务目的 | 明确目标指向的主题、概念、技能或问题边界。
+输入 State 键 | goal_draft_raw、task_snapshot
+输出 State 键 | knowledge_objects、goal_scope
+前置条件 | 目标草案非空
+核心处理 | 抽取1—5个知识对象并给出歧义提示。
+Domain / Tool / Model | LLM structured output(goal_object.v1)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 解析失败改用关键词规则并要求学习者确认
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=identify_knowledge_object、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 29
+字段 | 详细规格
+Node ID / 名称 | assess_goal_levels / 判断 Bloom 与 SOLO 起点
+业务目的 | 依据学习者实际证据分别形成两个起点建议。
+输入 State 键 | knowledge_objects、readiness_snapshot、baseline_evidence_refs
+输出 State 键 | bloom_start、solo_start、level_evidence_refs、confidence
+前置条件 | 至少有简短作答/作品证据；无证据则先 interrupt 收集
+核心处理 | Bloom B1-B6 与 SOLO S0-S4 分别判定；保留理由和证据引用，不合成总分。
+Domain / Tool / Model | GoalLevelAssessor(prompt goal_level.v2)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 低置信度标 unknown 并让学习者自评；不得猜测
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=assess_goal_levels、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 30
+字段 | 详细规格
+Node ID / 名称 | propose_goal_path / 形成二维目标与进阶路径
+业务目的 | 生成 Bloom×SOLO 目标、阶段目标和成功证据草案。
+输入 State 键 | bloom_start、solo_start、knowledge_objects、goal_draft_raw
+输出 State 键 | bloom_target_proposed、solo_target_proposed、milestones、success_criteria
+前置条件 | 起点已判定或明确 unknown
+核心处理 | 跨度≥2级时提出阶段拆分；B5/B6或S4必须绑定开放性成果证据。
+Domain / Tool / Model | GoalPolicy + LLM(goal_path.v2)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 规则生成最近一级目标和通用证据模板
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=propose_goal_path、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 31
+字段 | 详细规格
+Node ID / 名称 | confirm_goal / 确认目标层级与证据
+业务目的 | 将目标、层级与达成证据的最终决定权交给学习者。
+输入 State 键 | goal proposal 全部字段
+输出 State 键 | goal_decision、goal_contract_candidate
+前置条件 | 二维目标草案已通过Schema
+核心处理 | interrupt 允许 approve/revise/change_level/cancel；校验 resume 版本。
+Domain / Tool / Model | Interrupt GoalApprovalV2
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 重复 resume 返回 already_processed；7天过期
+降级与补偿 | 不设置默认同意
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=confirm_goal、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 32
+字段 | 详细规格
+Node ID / 名称 | persist_goal_contract / 固化目标契约
+业务目的 | 保存学习者确认的目标版本并产生审计事件。
+输入 State 键 | goal_contract_candidate、goal_decision
+输出 State 键 | goal_contract_ref、goal_version、phase=question_planning
+前置条件 | decision=approve 且 candidate_version 匹配
+核心处理 | 事务写目标、Bloom/SOLO起终点、里程碑与成功标准。
+Domain / Tool / Model | GoalRepository + Outbox
+副作用 | 写 learning_goal_contracts 与 goal.confirmed.v1
+幂等键与唯一约束 | session_id + goal_version 唯一
+超时与重试 | 数据库暂时错误2次；乐观锁冲突重新读取
+降级与补偿 | 失败保持在确认后待提交状态，不重复 interrupt
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=persist_goal_contract、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 33
+字段 | 详细规格
+Node ID / 名称 | elicit_question / 征集核心问题
+业务目的 | 让学习者提出驱动目标实现的起点问题。
+输入 State 键 | goal_contract_ref
+输出 State 键 | starting_question_raw、status=waiting
+前置条件 | goal 已确认
+核心处理 | interrupt 接收 propose/revise/cancel/help。
+Domain / Tool / Model | Interrupt QuestionProposalV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=elicit_question、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 34
+字段 | 详细规格
+Node ID / 名称 | assess_question_quality / 评价问题质量
+业务目的 | 判断目标相关性、清晰度、开放度、可探究性与认知层级。
+输入 State 键 | starting_question_raw、goal_contract_ref
+输出 State 键 | question_quality、question_feedback
+前置条件 | 问题非空
+核心处理 | 结构化评分只用于反馈，不自动驳回；提出具体改写方向。
+Domain / Tool / Model | QuestionAssessor(question_quality.v1)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 规则检查长度、问号、目标关键词并交学习者判断
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=assess_question_quality、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 35
+字段 | 详细规格
+Node ID / 名称 | build_question_tree / 构建问题树
+业务目的 | 把核心问题拆为有依赖关系的可探究子问题。
+输入 State 键 | starting_question_raw、goal_contract_ref、question_quality
+输出 State 键 | question_tree_candidate、dependency_edges
+前置条件 | 问题与目标基本相关
+核心处理 | 生成2—8个子问题；每项绑定里程碑、Bloom/SOLO目标和预期证据。
+Domain / Tool / Model | LLM(question_tree.v2)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 生成最小三步模板：理解—分析—验证
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=build_question_tree、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 36
+字段 | 详细规格
+Node ID / 名称 | confirm_question_tree / 确认问题树
+业务目的 | 由学习者决定核心问题、子问题与顺序。
+输入 State 键 | question_tree_candidate、question_quality
+输出 State 键 | question_tree_decision、question_tree_confirmed
+前置条件 | 候选树无环且子问题数在限制内
+核心处理 | interrupt 允许 approve/reorder/revise/remove/add/cancel。
+Domain / Tool / Model | Interrupt QuestionTreeApprovalV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=confirm_question_tree、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 37
+字段 | 详细规格
+Node ID / 名称 | plan_learning / 制定学习策略与节奏
+业务目的 | 形成策略、资源类型、时间和求助阈值。
+输入 State 键 | goal_contract_ref、question_tree_confirmed、readiness_snapshot
+输出 State 键 | strategy_plan、resource_requirements、time_budget
+前置条件 | 问题树已确认
+核心处理 | 学习者优先选择；系统只提供候选策略和可行性提示。
+Domain / Tool / Model | PlanningPolicy + LLM(strategy_candidates.v1)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=plan_learning、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 38
+字段 | 详细规格
+Node ID / 名称 | recommend_resources / 推荐候选资源
+业务目的 | 按目标、问题、画像和权限调用既有资源推荐能力。
+输入 State 键 | resource_requirements、goal/query refs
+输出 State 键 | resource_candidates、recommendation_trace
+前置条件 | 资源需求存在且 learning contract 未确认
+核心处理 | 调用 resource_recommendation_v1/WF02；不复制其内部算法。
+Domain / Tool / Model | Subgraph adapter resource_recommendation_v1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 总超时8s，暂时错误1次
+降级与补偿 | 空结果/失败允许自选、跳过或转人工，不阻断学习
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=recommend_resources、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 39
+字段 | 详细规格
+Node ID / 名称 | confirm_learning_contract / 确认学习契约
+业务目的 | 确认问题树、策略、资源、时间与退出条件。
+输入 State 键 | question_tree、strategy_plan、resource_candidates
+输出 State 键 | learning_contract_candidate、contract_decision
+前置条件 | 关键项完整
+核心处理 | interrupt 允许 approve/revise_resources/revise_strategy/skip_resources/cancel。
+Domain / Tool / Model | Interrupt LearningContractApprovalV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=confirm_learning_contract、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 40
+字段 | 详细规格
+Node ID / 名称 | persist_learning_contract / 固化学习契约
+业务目的 | 保存可恢复的正式学习计划并启动学习。
+输入 State 键 | learning_contract_candidate、contract_decision
+输出 State 键 | learning_contract_ref、learning_started=true、phase=inquiry
+前置条件 | decision=approve
+核心处理 | 事务写契约与事件；初始化当前子问题。
+Domain / Tool / Model | LearningContractRepository + Outbox
+副作用 | 写 learning_contracts 与 learning.started.v1
+幂等键与唯一约束 | session_id + contract_version 唯一
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=persist_learning_contract、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 41
+字段 | 详细规格
+Node ID / 名称 | select_subquestion / 选择当前子问题
+业务目的 | 确定本轮要处理且依赖已满足的子问题。
+输入 State 键 | question_tree、subquestion_statuses、learner_choice
+输出 State 键 | current_subquestion_id、round_index
+前置条件 | learning_started=true
+核心处理 | 列出可执行子问题；尊重学习者选择；无选择时按确认顺序建议。
+Domain / Tool / Model | Deterministic Dependency Router
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=select_subquestion、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 42
+字段 | 详细规格
+Node ID / 名称 | capture_initial_evidence / 收集先行尝试
+业务目的 | 在 AI 反馈前获得学习者的已有理解、方案或步骤。
+输入 State 键 | current_subquestion_id
+输出 State 键 | learner_evidence_ref、status=waiting
+前置条件 | 当前子问题有效
+核心处理 | interrupt 要求解释、作答、作品或步骤；允许不知道/求助。
+Domain / Tool / Model | Interrupt LearnerEvidenceV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=capture_initial_evidence、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 43
+字段 | 详细规格
+Node ID / 名称 | validate_evidence / 校验学习证据
+业务目的 | 判断证据是否足以进入反馈与冲突监测。
+输入 State 键 | learner_evidence_ref、event_type
+输出 State 键 | learner_evidence_valid、evidence_quality
+前置条件 | 已收到 resume
+核心处理 | 检查非空、语义相关、本人产生、可解析；AI原文不得算本人证据。
+Domain / Tool / Model | EvidenceValidator + optional LLM(evidence_validity.v1)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 低置信度判 invalid 并请求具体化，不触发冲突
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=validate_evidence、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 44
+字段 | 详细规格
+Node ID / 名称 | provide_feedback / 提供材料、案例或不同观点
+业务目的 | 提供促进思考的信息，而非代替学习者给出最终答案。
+输入 State 键 | current_subquestion、valid evidence、strategy_plan
+输出 State 键 | feedback_ref、feedback_type、feedback_claims
+前置条件 | learner_evidence_valid=true
+核心处理 | 按目标层级选择材料、反例、案例、提示或不同解释；标明来源与不确定性。
+Domain / Tool / Model | WF01 adapter + Retrieval + LLM(feedback.v3)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 模型/检索总超时12s，暂时错误1次
+降级与补偿 | 使用已审核静态支架；无资源则允许继续自我解释
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=provide_feedback、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 45
+字段 | 详细规格
+Node ID / 名称 | capture_analysis_response / 收集比较与核验
+业务目的 | 让学习者比较自身观点与新信息并显化差异。
+输入 State 键 | learner_evidence_ref、feedback_ref
+输出 State 键 | analysis_evidence_ref、event_type、self_report
+前置条件 | 反馈已产生
+核心处理 | interrupt 提示比较、解释、质疑、证据核验；允许主动求助。
+Domain / Tool / Model | Interrupt AnalysisEvidenceV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=capture_analysis_response、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 46
+字段 | 详细规格
+Node ID / 名称 | run_conflict_subgraph / 调用认知冲突子图
+业务目的 | 在满足资格时调用独立冲突监测与调节能力。
+输入 State 键 | learning_started、valid evidence、analysis evidence、event_type
+输出 State 键 | conflict_summary、regulation_summary、warning_summary
+前置条件 | 严格满足 conflict eligibility；目标/初始问题阶段不得调用
+核心处理 | 包装输入映射；运行 conflict_regulation 子图；只消费稳定输出。
+Domain / Tool / Model | Compiled subgraph conflict_regulation_v3
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 子图失败写 conflict_status=unknown，继续学习主线
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=run_conflict_subgraph、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 47
+字段 | 详细规格
+Node ID / 名称 | collect_self_judgment / 收集学习者自我判断
+业务目的 | 由学习者判断当前理解变化及问题是否解决。
+输入 State 键 | analysis_evidence、conflict_summary、success_criteria
+输出 State 键 | self_judgment、confidence_after、next_intent
+前置条件 | 学习者已完成比较/调节回应
+核心处理 | interrupt：resolved/continue_questioning/change_strategy/help；CCI不得替代决定。
+Domain / Tool / Model | Interrupt SelfJudgmentV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=collect_self_judgment、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 48
+字段 | 详细规格
+Node ID / 名称 | elicit_followup / 引导自主追问
+业务目的 | 支持学习者选择并提出更高质量追问。
+输入 State 键 | self_judgment、question_context、round_index
+输出 State 键 | followup_question、followup_type
+前置条件 | next_intent=continue_questioning 且未超上限
+核心处理 | 提供证据、概念、因果、反例、条件、迁移等追问类型；学习者生成最终问题。
+Domain / Tool / Model | LLM(question_scaffold.v2) + Interrupt
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=elicit_followup、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 49
+字段 | 详细规格
+Node ID / 名称 | adjust_learning_path / 调整策略或资源
+业务目的 | 在停滞、证据不足或学习者选择时调整路径。
+输入 State 键 | progress_snapshot、strategy_plan、warnings
+输出 State 键 | strategy_plan_next、resource_delta、adjust_reason
+前置条件 | 未达成且允许继续
+核心处理 | 确定性识别停滞；提出换策略、降解任务、重选资源或求助选项。
+Domain / Tool / Model | PathAdjustmentPolicy + optional LLM
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 使用分步任务和人工帮助选项
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=adjust_learning_path、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 50
+字段 | 详细规格
+Node ID / 名称 | record_tentative_solution / 记录子问题暂定解
+业务目的 | 保存学习者形成的论证链、证据与不确定点。
+输入 State 键 | self_judgment、analysis_evidence
+输出 State 键 | tentative_solution_ref、subquestion_status=tentative
+前置条件 | learner says resolved
+核心处理 | 生成结构化摘要并要求证据引用；标记为暂定而非最终正确。
+Domain / Tool / Model | SolutionRepository + LLM(summary.v1)
+副作用 | 写 subquestion_solutions 新版本
+幂等键与唯一约束 | session_id + subquestion_id + solution_version 唯一
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=record_tentative_solution、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 51
+字段 | 详细规格
+Node ID / 名称 | integrate_viewpoint / 整合学习者观点
+业务目的 | 将全部暂定解整合为学习者自己的结论草案。
+输入 State 键 | tentative_solution_refs、question_tree
+输出 State 键 | viewpoint_candidate、open_uncertainties
+前置条件 | 所有必需子问题有暂定解
+核心处理 | 按学习者证据组织论证，保留冲突与未知，不补写无来源结论。
+Domain / Tool / Model | LLM(viewpoint_integration.v2)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 按子问题顺序拼接证据摘要并请求人工整理
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=integrate_viewpoint、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 52
+字段 | 详细规格
+Node ID / 名称 | detect_conflict / 识别认知冲突
+业务目的 | 判断学习者认知与反馈/证据是否存在可解释不一致。
+输入 State 键 | pre/post learner evidence、feedback claims、context
+输出 State 键 | conflict_detected、detection_confidence、conflict_evidence_spans
+前置条件 | eligibility=true
+核心处理 | 调用冲突二分类模型；低置信度不触发调节。
+Domain / Tool / Model | ConflictDetector model versioned
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 推理3s，暂时错误1次
+降级与补偿 | unknown；不伪造无冲突
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=detect_conflict、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 53
+字段 | 详细规格
+Node ID / 名称 | classify_conflict / 分类三层八类
+业务目的 | 将已检测冲突映射为知识、逻辑思维、元认知三层八类。
+输入 State 键 | conflict spans、context
+输出 State 键 | conflict_layer、conflict_type、type_confidence
+前置条件 | conflict_detected=true
+核心处理 | 知识：事实/概念；逻辑思维：协作/推理/控制；元认知：知识/体验/监控。
+Domain / Tool / Model | ConflictClassifier model versioned
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 保留 layer/type=unknown，仍可使用通用支架
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=classify_conflict、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 54
+字段 | 详细规格
+Node ID / 名称 | calculate_cci / 计算 CCI
+业务目的 | 计算强度、变化量、区间与持续轮次。
+输入 State 键 | conflict features、history refs、self report
+输出 State 键 | cci_value、cci_band、cci_delta、overload_streak
+前置条件 | 存在足够特征
+核心处理 | 确定性公式计算；<2.5不足、2.5—3.5适宜、>3.5过载；目标中心3.0。
+Domain / Tool / Model | CCI Domain Service
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 纯计算1s，不重试不变量错误
+降级与补偿 | CCI unknown，使用不依赖强度的通用澄清支架
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=calculate_cci、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 55
+字段 | 详细规格
+Node ID / 名称 | select_regulation_strategy / 选择调节策略
+业务目的 | 依据类型、强度、趋势和历史效果选择策略。
+输入 State 键 | conflict type、CCI、goal levels、history
+输出 State 键 | regulation_strategy_id、strategy_reason
+前置条件 | 冲突已检测
+核心处理 | 不足区增强差异；适宜区维持张力；过载区先降负。规则先于模型。
+Domain / Tool / Model | RegulationPolicy + StrategyRepository
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=select_regulation_strategy、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 56
+字段 | 详细规格
+Node ID / 名称 | generate_scaffold / 生成个性化支架
+业务目的 | 把策略转化为不代答的学习者提示。
+输入 State 键 | strategy、evidence、goal levels
+输出 State 键 | scaffold_ref、scaffold_payload
+前置条件 | 策略有效且内容安全
+核心处理 | 结构化生成反例/比较/追问/分步/情绪支持；不泄露系统提示。
+Domain / Tool / Model | LLM(scaffold.v3)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 使用审核过的类型×区间模板
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=generate_scaffold、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 57
+字段 | 详细规格
+Node ID / 名称 | capture_post_regulation / 收集调节后证据
+业务目的 | 获得学习者对支架的真实反应以便复评。
+输入 State 键 | scaffold_payload
+输出 State 键 | post_regulation_evidence_ref、status=waiting
+前置条件 | 支架已展示
+核心处理 | interrupt 允许 respond/pause/help/cancel。
+Domain / Tool / Model | Interrupt RegulationResponseV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=capture_post_regulation、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 58
+字段 | 详细规格
+Node ID / 名称 | reassess_conflict / 复评冲突与进展
+业务目的 | 判断冲突是否恢复适宜、是否推进问题。
+输入 State 键 | post evidence、prior CCI/conflict
+输出 State 键 | cci_after、conflict_after、progress_after
+前置条件 | 调节后证据有效
+核心处理 | 复用检测/分类/CCI服务但标记 reassessment；最多3轮调节。
+Domain / Tool / Model | Conflict services + ProgressAssessor
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=reassess_conflict、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 59
+字段 | 详细规格
+Node ID / 名称 | evaluate_warning / 评估预警
+业务目的 | 综合过载持续、ΔCCI、无进展与求助形成预警级别。
+输入 State 键 | reassessment history、help/safety signals
+输出 State 键 | warning_level、warning_reason、teacher_alert_candidate
+前置条件 | 复评仍异常或主动求助
+核心处理 | 单次过载不直接教师预警；安全风险可立即升级；首阶段教师预警仅形成系统记录。
+Domain / Tool / Model | WarningPolicy deterministic
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=evaluate_warning、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 60
+字段 | 详细规格
+Node ID / 名称 | persist_conflict_episode / 记录冲突片段
+业务目的 | 保存可解释的检测、调节、复评和效果记录。
+输入 State 键 | conflict/regulation/warning summaries
+输出 State 键 | conflict_episode_ref
+前置条件 | 子图准备退出
+核心处理 | 写结构化记录及模型/策略版本，不存不必要完整上下文。
+Domain / Tool / Model | ConflictEpisodeRepository + Outbox
+副作用 | 写 conflict_episodes、regulation_events、teacher_alerts
+幂等键与唯一约束 | session_id + eligible_event_id + episode_version 唯一
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=persist_conflict_episode、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 61
+字段 | 详细规格
+Node ID / 名称 | verify_sources / 核验事实与来源
+业务目的 | 验证最终观点中的外部事实、引文和来源可追溯性。
+输入 State 键 | viewpoint_candidate、source_refs
+输出 State 键 | verification_report、unsupported_claims
+前置条件 | 结论草案存在
+核心处理 | 逐主张核验来源权限、存在性、一致性和不确定性。
+Domain / Tool / Model | SourceVerifier + Retrieval
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 无法核验的主张明确标 unsupported，不自动判通过
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=verify_sources、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 62
+字段 | 详细规格
+Node ID / 名称 | request_self_explanation / 请求自我解释
+业务目的 | 要求学习者独立讲解结论、关系和理由。
+输入 State 键 | viewpoint_candidate、success_criteria
+输出 State 键 | self_explanation_ref、status=waiting
+前置条件 | 来源核验完成
+核心处理 | interrupt 让学习者讲给他人、画关系或解释推理；AI不代写。
+Domain / Tool / Model | Interrupt SelfExplanationV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=request_self_explanation、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 63
+字段 | 详细规格
+Node ID / 名称 | evaluate_self_explanation / 评价解释证据
+业务目的 | 评估 Bloom 操作和 SOLO 结构是否达到目标。
+输入 State 键 | self_explanation、goal contract、rubric
+输出 State 键 | bloom_evidence_result、solo_evidence_result、gaps
+前置条件 | 解释证据有效
+核心处理 | 两个维度分别评价并引用证据；不得合成无解释总分。
+Domain / Tool / Model | RubricEvaluator(prompt evidence_eval.v2)
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 规则检查目标动词和结构证据，低置信度转学习者复核
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=evaluate_self_explanation、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 64
+字段 | 详细规格
+Node ID / 名称 | generate_transfer_task / 生成迁移/变式任务
+业务目的 | 创建能检验理解迁移而非记忆复述的新任务。
+输入 State 键 | goal contract、viewpoint、gaps
+输出 State 键 | transfer_task_ref、transfer_rubric
+前置条件 | 需要迁移证据
+核心处理 | 改变情境或条件，保持核心结构；B5/B6或S4使用开放任务。
+Domain / Tool / Model | LLM(transfer_task.v2) + TaskValidator
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=generate_transfer_task、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 65
+字段 | 详细规格
+Node ID / 名称 | evaluate_transfer / 评价迁移表现
+业务目的 | 判断学习者能否在新情境独立应用和解释。
+输入 State 键 | transfer_response_ref、rubric
+输出 State 键 | transfer_result、transfer_evidence_refs
+前置条件 | 收到学习者作答
+核心处理 | 结构化评分、证据引用、置信度和可申诉说明。
+Domain / Tool / Model | TransferEvaluator
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 转人工/自评并标 pending_review
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=evaluate_transfer、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 66
+字段 | 详细规格
+Node ID / 名称 | evaluate_stage_goal / 评价阶段目标
+业务目的 | 综合来源、自我解释和迁移证据判断里程碑。
+输入 State 键 | verification、Bloom/SOLO、transfer
+输出 State 键 | stage_goal_status、stage_gap、recommended_route
+前置条件 | 至少一类有效证据
+核心处理 | 确定性聚合证据；任何模型单项不能独立决定完成。
+Domain / Tool / Model | GoalEvaluationPolicy
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=evaluate_stage_goal、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 67
+字段 | 详细规格
+Node ID / 名称 | collect_reflection / 收集阶段反思与归因
+业务目的 | 让学习者反思目标、策略、资源、冲突与投入。
+输入 State 键 | learning trace summary、goal evaluation
+输出 State 键 | reflection_ref、attribution、learner_strategy_rating
+前置条件 | 阶段评价已完成
+核心处理 | interrupt 提供开放反思与结构化量表；允许修改总结。
+Domain / Tool / Model | Interrupt ReflectionV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=collect_reflection、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 68
+字段 | 详细规格
+Node ID / 名称 | update_self_efficacy / 更新自我效能摘要
+业务目的 | 基于学习者自报和成功证据形成本次变化记录。
+输入 State 键 | reflection、evidence outcomes
+输出 State 键 | self_efficacy_delta、self_efficacy_note
+前置条件 | 反思完成
+核心处理 | 不以 CCI 或系统评分直接推断人格/能力；保存可解释依据。
+Domain / Tool / Model | SelfEfficacyPolicy
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=update_self_efficacy、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 69
+字段 | 详细规格
+Node ID / 名称 | update_learner_profile / 更新长期学习画像
+业务目的 | 将稳定、可复用的偏好与能力证据写入画像新版本。
+输入 State 键 | reflection、goal outcomes、strategy effects
+输出 State 键 | profile_update_ref、profile_version
+前置条件 | 学习者同意且字段允许长期保存
+核心处理 | 只写摘要与证据引用；敏感项按同意策略处理。
+Domain / Tool / Model | LearnerProfileRepository
+副作用 | 写 learner_profile_versions 与 profile.updated.v1
+幂等键与唯一约束 | session_id + profile_update_type 唯一
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=update_learner_profile、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 70
+字段 | 详细规格
+Node ID / 名称 | evaluate_overall_goal / 评价总体目标
+业务目的 | 区分完成、部分完成、修改目标或结束。
+输入 State 键 | all stage statuses、goal contract、learner decision
+输出 State 键 | overall_goal_status、next_cycle_decision
+前置条件 | 阶段反思完成
+核心处理 | 系统提供证据摘要；最终由学习者选择 complete/revise/new_cycle/stop。
+Domain / Tool / Model | GoalPolicy + Interrupt OverallDecisionV1
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=evaluate_overall_goal、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 71
+字段 | 详细规格
+Node ID / 名称 | complete_session / 完成会话
+业务目的 | 生成稳定输出、学习档案和完成事件。
+输入 State 键 | overall status、all result refs
+输出 State 键 | OutputState completed、portfolio_ref
+前置条件 | 学习者确认 complete 且必要写入成功
+核心处理 | 事务写最终摘要、结束状态和 outbox；冻结本版本契约。
+Domain / Tool / Model | SessionRepository + PortfolioBuilder
+副作用 | 写 session completion、portfolio、learning.completed.v1
+幂等键与唯一约束 | session_id + completion_version 唯一
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=complete_session、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 72
+字段 | 详细规格
+Node ID / 名称 | pause_or_manual_help / 暂停与人工帮助
+业务目的 | 从任意允许节点安全暂停并生成恢复信息。
+输入 State 键 | phase、reason、current refs
+输出 State 键 | status=waiting、interrupt payload、help_ticket_ref?
+前置条件 | 用户主动暂停/求助或策略要求
+核心处理 | 保存 checkpoint；人工帮助只创建系统内任务，不外发。
+Domain / Tool / Model | Interrupt + HelpRepository
+副作用 | 可选写 help_requests
+幂等键与唯一约束 | session_id + request_fingerprint 唯一
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=pause_or_manual_help、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 73
+字段 | 详细规格
+Node ID / 名称 | finalize_cancelled / 取消会话
+业务目的 | 处理用户取消并保留必要审计。
+输入 State 键 | cancel decision、side_effect_refs
+输出 State 键 | status=cancelled、OutputState
+前置条件 | 合法用户/系统取消
+核心处理 | 停止后续节点；已发生学习记录不物理回滚，标记会话取消。
+Domain / Tool / Model | SessionRepository
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=finalize_cancelled、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 74
+字段 | 详细规格
+Node ID / 名称 | finalize_expired / 处理等待过期
+业务目的 | 按政策结束超时等待。
+输入 State 键 | interrupt_created_at、expiry_policy
+输出 State 键 | status=expired、next_action
+前置条件 | 到达绝对过期时间
+核心处理 | 不自动批准目标/契约；保留可新建会话的摘要。
+Domain / Tool / Model | Clock + SessionRepository
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=finalize_expired、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 75
+字段 | 详细规格
+Node ID / 名称 | finalize_failed / 稳定失败终结
+业务目的 | 将不可恢复错误转换为稳定输出并保留诊断引用。
+输入 State 键 | error_code、error_ref、phase
+输出 State 键 | status=failed、recoverable、support_ref
+前置条件 | 永久故障或不变量错误
+核心处理 | 最小化错误输出；安全记录内部诊断；不泄露堆栈和模型上下文。
+Domain / Tool / Model | ErrorPolicy + AuditRepository
+副作用 | 无外部副作用，仅返回 State 增量
+幂等键与唯一约束 | 纯状态变换；节点重放结果应确定且不得产生重复外部写入
+超时与重试 | 确定性逻辑 2s；不重试输入或不变量错误
+降级与补偿 | 写入 warnings 并进入确定性安全路径；不得伪造业务结果
+错误码 | CRSDL_NODE_INVALID_STATE；CRSDL_DEPENDENCY_UNAVAILABLE
+日志与指标 | node=finalize_failed、phase、route、duration_ms、attempt、state_diff_keys、error_code
+测试 | 正常输入、缺字段、非法阶段、重复执行、超时/依赖失败、旧 State 兼容
+
+## TABLE 76
+来源 | 条件/事件 | 优先级 | 目标 | 默认/非法处理
+diagnose_readiness | continue | 10 | elicit_goal | invalid→request_more
+confirm_goal | approve | 10 | persist_goal_contract | 非法action→waiting/error
+confirm_goal | revise/change_level | 20 | elicit_goal/propose_goal_path | 保持原候选版本
+confirm_question_tree | approve | 10 | plan_learning | 
+confirm_learning_contract | approve | 10 | persist_learning_contract | 
+validate_evidence | valid | 10 | provide_feedback | 
+validate_evidence | invalid | 20 | capture_initial_evidence | max3→help
+capture_analysis_response | eligible | 10 | run_conflict_subgraph | 确定性资格
+capture_analysis_response | not_eligible | 20 | collect_self_judgment | 不得调用冲突服务
+reassess_conflict | suitable_or_progress | 10 | persist_conflict_episode | 
+reassess_conflict | still_abnormal_under_limit | 20 | select_regulation_strategy | 
+reassess_conflict | over_limit_or_help | 30 | evaluate_warning | 
+collect_self_judgment | continue_questioning | 10 | elicit_followup | 
+collect_self_judgment | change_strategy | 20 | adjust_learning_path | 
+collect_self_judgment | resolved | 30 | record_tentative_solution | 
+subquestion router | remaining | 10 | select_subquestion | 
+subquestion router | all_tentative | 20 | integrate_viewpoint | 
+evaluate_stage_goal | not_met | 10 | adjust_learning_path | 
+evaluate_stage_goal | met | 20 | collect_reflection | 
+evaluate_overall_goal | new_cycle/revise | 10 | elicit_goal | 保留历史版本
+evaluate_overall_goal | complete | 20 | complete_session | 
+any interrupt | cancel | 1 | finalize_cancelled | 取消优先
+any node | fatal invariant | 1 | finalize_failed | 不得继续
+class Route(str, Enum): /     CONTINUE = "continue" /     REQUEST_MORE = "request_more" /     REVISE = "revise" /     RUN_CONFLICT = "run_conflict" /     SKIP_CONFLICT = "skip_conflict" /     ADJUST = "adjust" /     HELP = "help" /     COMPLETE = "complete" /     CANCEL = "cancel" /     FAIL = "fail" /  / # 路由只读取已校验State；LLM不得直接返回节点名。 | class Route(str, Enum): /     CONTINUE = "continue" /     REQUEST_MORE = "request_more" /     REVISE = "revise" /     RUN_CONFLICT = "run_conflict" /     SKIP_CONFLICT = "skip_conflict" /     ADJUST = "adjust" /     HELP = "help" /     COMPLETE = "complete" /     CANCEL = "cancel" /     FAIL = "fail" /  / # 路由只读取已校验State；LLM不得直接返回节点名。 | class Route(str, Enum): /     CONTINUE = "continue" /     REQUEST_MORE = "request_more" /     REVISE = "revise" /     RUN_CONFLICT = "run_conflict" /     SKIP_CONFLICT = "skip_conflict" /     ADJUST = "adjust" /     HELP = "help" /     COMPLETE = "complete" /     CANCEL = "cancel" /     FAIL = "fail" /  / # 路由只读取已校验State；LLM不得直接返回节点名。 | class Route(str, Enum): /     CONTINUE = "continue" /     REQUEST_MORE = "request_more" /     REVISE = "revise" /     RUN_CONFLICT = "run_conflict" /     SKIP_CONFLICT = "skip_conflict" /     ADJUST = "adjust" /     HELP = "help" /     COMPLETE = "complete" /     CANCEL = "cancel" /     FAIL = "fail" /  / # 路由只读取已校验State；LLM不得直接返回节点名。 | class Route(str, Enum): /     CONTINUE = "continue" /     REQUEST_MORE = "request_more" /     REVISE = "revise" /     RUN_CONFLICT = "run_conflict" /     SKIP_CONFLICT = "skip_conflict" /     ADJUST = "adjust" /     HELP = "help" /     COMPLETE = "complete" /     CANCEL = "cancel" /     FAIL = "fail" /  / # 路由只读取已校验State；LLM不得直接返回节点名。
+
+## TABLE 77
+Interrupt ID | 触发 | 展示载荷 | 允许操作 | Resume Schema | 超时/重复
+goal.propose.v1 | 等待初步目标 | 需要摘要、示例 | propose/help/cancel | GoalProposal | 7天；submission_id去重
+goal.approve.v2 | 二维目标草案完成 | Bloom/SOLO起终点、证据标准 | approve/revise/change_level/cancel | GoalDecision | 7天；候选version校验
+question.propose.v1 | goal已固化 | 目标摘要 | propose/help/cancel | QuestionProposal | 7天
+question_tree.approve.v1 | 问题树完成 | 节点、依赖、目标映射 | approve/reorder/revise/add/remove/cancel | QuestionTreeDecision | 7天；乐观锁
+learning_contract.approve.v1 | 计划与资源候选完成 | 策略、资源、时间、上限 | approve/revise/skip/cancel | ContractDecision | 7天
+learner.evidence.v1 | 进入子问题 | 问题、成功标准 | respond/dont_know/help/pause/cancel | LearnerEvidence | 24小时滚动；7天绝对
+analysis.evidence.v1 | 反馈已展示 | 自身观点与新信息 | respond/question/help/pause/cancel | AnalysisEvidence | 同上
+regulation.response.v1 | 支架生成 | 支架、选择项 | respond/help/pause/cancel | RegulationResponse | 同上
+self_judgment.v1 | 比较/调节完成 | 证据摘要、当前进展 | resolved/continue/change_strategy/help | SelfJudgment | 同上
+self_explanation.v1 | 结论草案完成 | 观点、不确定点、标准 | respond/help/pause/cancel | SelfExplanation | 3天
+reflection.v1 | 阶段评价完成 | 学习轨迹摘要 | respond/revise/pause/cancel | Reflection | 7天
+overall.decision.v1 | 总体证据汇总 | 达成/缺口/建议 | complete/new_cycle/revise/stop | OverallDecision | 7天；不得默认complete
+
+## TABLE 78
+名称 | 类型 | 结构化输出 | 超时/重试 | 降级
+readiness_assessor | LLM+规则 | NeedAssessment | 6s/1次 | 规则问卷模板
+goal_level_assessor | LLM+Rubric | BloomSoloAssessment | 8s/1次 | unknown+学习者自评
+question_assessor | LLM | QuestionQuality | 6s/1次 | 规则检查
+resource_recommendation_v1 | 既有子图 | ResourceCandidate[] | 8s/1次 | 自选/跳过/人工
+WF01_learning | 既有工作流适配器 | FeedbackEnvelope | 12s/1次 | 审核静态支架
+conflict_detector | 本地/服务模型 | ConflictDetection | 3s/1次 | unknown并继续
+conflict_classifier | 本地/服务模型 | ConflictClassification | 3s/1次 | unknown通用支架
+cci_service | 确定性Domain | CCIResult | 1s/0次 | unknown通用支架
+strategy_repository | Tool | StrategyRecord | 3s/2次 | 内置安全策略
+source_verifier | 检索/规则 | VerificationReport | 10s/1次 | unsupported标记
+rubric_evaluator | LLM+规则 | LevelEvidenceResult | 8s/1次 | 规则+待复核
+learner_profile_repo | Repository | ProfileVersion | 3s/2次 | warning，不阻断完成
+模型边界：模型适用于抽取、候选生成、语义评价、解释和支架；身份授权、路由优先级、CCI数值计算、租户隔离、事务提交、唯一性、终态与版本迁移全部使用确定性代码。 | 模型边界：模型适用于抽取、候选生成、语义评价、解释和支架；身份授权、路由优先级、CCI数值计算、租户隔离、事务提交、唯一性、终态与版本迁移全部使用确定性代码。 | 模型边界：模型适用于抽取、候选生成、语义评价、解释和支架；身份授权、路由优先级、CCI数值计算、租户隔离、事务提交、唯一性、终态与版本迁移全部使用确定性代码。 | 模型边界：模型适用于抽取、候选生成、语义评价、解释和支架；身份授权、路由优先级、CCI数值计算、租户隔离、事务提交、唯一性、终态与版本迁移全部使用确定性代码。 | 模型边界：模型适用于抽取、候选生成、语义评价、解释和支架；身份授权、路由优先级、CCI数值计算、租户隔离、事务提交、唯一性、终态与版本迁移全部使用确定性代码。
+
+## TABLE 79
+对象 | 权威职责 | 保存内容 | 保留/删除
+Checkpoint | 执行位置与恢复 | State快照、next、interrupt、图版本 | 活动期+30天；完成后按策略压缩/删除
+业务数据库 | 可独立解释的事实 | 会话、目标、问题树、契约、证据、评价、冲突片段、画像版本 | 按项目隐私与研究政策
+长期记忆 | 跨thread稳定摘要 | 经同意的偏好、策略效果、自我效能摘要 | 可查看、纠正、撤回
+对象存储 | 大文件 | 文档、图片、音视频、作品 | 引用+访问控制+生命周期
+审计/事件库 | 动作证据和可靠通信 | 关键路由、确认、版本、模型、Tool、Outbox | 不可静默修改；按审计策略
+
+## TABLE 80
+控制点 | 设计
+创建幂等 | tenant_id+actor_id+client_request_id唯一；重复请求返回原session
+Resume幂等 | interrupt_id+submission_id唯一；已处理返回原结果
+业务写入 | 目标/契约/完成等写入与Outbox同事务
+乐观锁 | goal_version、question_tree_version、contract_version、profile_version；冲突重读重算
+Reducer | warnings/evidence_refs/tentative_solution_refs使用append+去重；字典按实体key更新
+重放 | 模型调用使用request_fingerprint缓存；副作用节点读前检查幂等表
+并行 | 分支只写独立键；汇合节点定义部分失败和超时语义
+补偿 | 不物理回滚已发生学习事实；创建新版本、撤销标记或反向事件
+预算 | 每会话模型调用、Token、总时长、子问题数、循环数均有硬上限
+
+## TABLE 81
+控制点 | 要求
+身份与租户 | 只从可信认证上下文读取；每个Repository/Tool调用前动作级授权
+Prompt注入 | 学习者内容与系统指令隔离；检索内容视为不可信数据；Tool参数白名单
+送模数据 | 最小化、脱敏、按模型供应商策略路由；禁止密钥和无关个人信息
+学习证据 | 区分本人输入、AI输出、外部材料；AI原文不能标为本人证据
+模型安全 | 输出内容安全检测、来源与不确定性标记、禁止越权代决策
+人工支持 | 验证教师角色、对象授权和当前版本；首阶段预警只写系统记录
+日志审计 | 不记录密码、Token、Cookie、完整敏感上下文；错误对外最小化
+成本控制 | 按租户/会话/模型设置预算、速率和并发限制
+
+## TABLE 82
+类别 | 至少记录/指标
+链路 | workflow/version、state_schema、session/thread/run/request/correlation、tenant哈希
+节点 | start/end、duration、attempt、state_diff_keys、route、error_code、replayed
+模型 | provider/model/prompt/schema版本、token、latency、validation、fallback、cache
+Tool | name/version、duration、status、cache、external_ref、error_code
+工作流 | 创建、完成、等待、恢复、取消、过期、失败、循环、人工帮助
+业务 | 目标确认率、问题树修订率、有效证据率、Bloom/SOLO达成、迁移通过、策略有效性
+冲突 | eligible率、检测/分类置信度、CCI区间分布、ΔCCI、调节轮次、恢复率、预警率
+告警 | 失败率、P95延迟、Checkpoint失败、resume冲突、模型降级、过载持续、预算耗尽
+
+## TABLE 83
+测试类型 | 必须覆盖
+State契约 | 必填/默认/序列化/敏感字段/Schema v3→v4迁移
+节点单测 | 每个节点正常、边界、错误、超时、降级、旧State
+路由 | 每个有限枚举、优先级、默认与非法状态；LLM不得决定节点名
+主路径 | 标准完成、目标修改、问题树修改、资源跳过、多子问题、未达成新循环
+冲突路径 | 禁止前置、低/中/高CCI、检测失败、分类失败、3轮复评、单次过载不教师预警
+Bloom×SOLO | 两个维度独立、S0不作目标、跨度拆分、B5/B6/S4开放证据、低置信度unknown
+Interrupt | 断线、进程重启、重复resume、过期、错误actor、旧version、非法action
+幂等重放 | 重复创建、重复确认、节点重放、Outbox去重、模型请求缓存
+并发 | 双端同时修改目标/问题树、Reducer、乱序事件、部分失败
+安全 | 越权、跨租户、注入、超长输入、恶意文件、敏感日志、AI文本冒充证据
+负载 | 目标并发、Checkpoint TPS、连接池、队列、模型限流、恢复风暴
+版本发布 | 旧thread固定旧图/迁移/终止策略、feature flag灰度、数据库前后兼容、回滚演练
+
+## TABLE 84
+指标 | 门槛
+路径覆盖 | 全部定义路由100%；主路径、主要异常路径和每个END终态均有测试
+节点覆盖 | Domain/route/policy行覆盖≥90%；关键副作用节点分支覆盖100%
+恢复 | 进程重启后waiting thread恢复成功率100%；重复resume无重复副作用
+可靠性 | 幂等/并发/重放测试零重复业务事实；Outbox可追踪
+性能 | 不含人工等待的确定性节点P95<300ms；模型节点遵守各自超时；创建/恢复接口满足项目压测目标
+安全 | 跨租户、越权和Prompt注入关键用例全部阻断；日志扫描无敏感数据
+教育不变量 | 目标/问题/完成未经学习者确认不得固化；目标阶段冲突服务调用次数必须为0
+
+## TABLE 85
+workflows/conflict_regulated_self_directed_learning/ / ├─ __init__.py / ├─ specification.md / ├─ state.py / ├─ contracts.py / ├─ policies.py / ├─ routes.py / ├─ graph.py / ├─ composition.py / ├─ nodes/ / │  ├─ initialization.py / │  ├─ goal_planning.py / │  ├─ question_planning.py / │  ├─ inquiry.py / │  ├─ validation_reflection.py / │  └─ finalization.py / ├─ subgraphs/ / │  ├─ goal_planning/ / │  ├─ inquiry_problem_solving/ / │  ├─ conflict_regulation/ / │  └─ validation_reflection/ / └─ deployment.md /  / tests/workflows/conflict_regulated_self_directed_learning/ / ├─ test_state.py / ├─ test_nodes.py / ├─ test_routes.py / ├─ test_graph_paths.py / ├─ test_subgraphs.py / ├─ test_interrupt_resume.py / ├─ test_idempotency_replay.py / ├─ test_concurrency.py / ├─ test_security.py / ├─ test_load.py / └─ test_version_compatibility.py | workflows/conflict_regulated_self_directed_learning/ / ├─ __init__.py / ├─ specification.md / ├─ state.py / ├─ contracts.py / ├─ policies.py / ├─ routes.py / ├─ graph.py / ├─ composition.py / ├─ nodes/ / │  ├─ initialization.py / │  ├─ goal_planning.py / │  ├─ question_planning.py / │  ├─ inquiry.py / │  ├─ validation_reflection.py / │  └─ finalization.py / ├─ subgraphs/ / │  ├─ goal_planning/ / │  ├─ inquiry_problem_solving/ / │  ├─ conflict_regulation/ / │  └─ validation_reflection/ / └─ deployment.md /  / tests/workflows/conflict_regulated_self_directed_learning/ / ├─ test_state.py / ├─ test_nodes.py / ├─ test_routes.py / ├─ test_graph_paths.py / ├─ test_subgraphs.py / ├─ test_interrupt_resume.py / ├─ test_idempotency_replay.py / ├─ test_concurrency.py / ├─ test_security.py / ├─ test_load.py / └─ test_version_compatibility.py
+交付物 | 验收内容
+specification.md | 与本文版本一致的机器仓库规格和图清单
+state.py | 四类State、Reducer、枚举和迁移函数
+contracts.py | Tool、事件、模型、interrupt/resume、错误Schema
+policies.py | 资格、CCI、预警、循环、预算和终态规则
+routes.py | 纯函数、有限枚举、非法状态处理
+graph.py | 图构建/编译；不初始化基础设施
+composition.py | 端口实现、Checkpointer、Registry、feature flag注入
+nodes/subgraphs | 单一职责实现与稳定输入输出
+tests | 本章矩阵全部自动化或有明确环境说明
+deployment.md | 配置、数据库、worker、队列、指标、灰度、迁移、回滚
+
+## TABLE 86
+类别 | 值 | 值
+BloomLevel | B1_REMEMBER、B2_UNDERSTAND、B3_APPLY、B4_ANALYZE、B5_EVALUATE、B6_CREATE | B1_REMEMBER、B2_UNDERSTAND、B3_APPLY、B4_ANALYZE、B5_EVALUATE、B6_CREATE
+SoloLevel | S0_PRESTRUCTURAL、S1_UNISTRUCTURAL、S2_MULTISTRUCTURAL、S3_RELATIONAL、S4_EXTENDED_ABSTRACT | S0_PRESTRUCTURAL、S1_UNISTRUCTURAL、S2_MULTISTRUCTURAL、S3_RELATIONAL、S4_EXTENDED_ABSTRACT
+ConflictLayer | KNOWLEDGE、LOGICAL_THINKING、METACOGNITION | KNOWLEDGE、LOGICAL_THINKING、METACOGNITION
+ConflictType | FACT、CONCEPT、COLLABORATION、REASONING、CONTROL、META_KNOWLEDGE、META_EXPERIENCE、META_MONITORING | FACT、CONCEPT、COLLABORATION、REASONING、CONTROL、META_KNOWLEDGE、META_EXPERIENCE、META_MONITORING
+CCIband | INSUFFICIENT(<2.5)、OPTIMAL(2.5—3.5)、OVERLOAD(>3.5)、UNKNOWN | INSUFFICIENT(<2.5)、OPTIMAL(2.5—3.5)、OVERLOAD(>3.5)、UNKNOWN
+Status | RUNNING、WAITING、COMPLETED、FAILED、CANCELLED、EXPIRED | RUNNING、WAITING、COMPLETED、FAILED、CANCELLED、EXPIRED
+WarningLevel | NONE、LEARNER_NOTICE、TEACHER_RECORD、SAFETY_ESCALATION | NONE、LEARNER_NOTICE、TEACHER_RECORD、SAFETY_ESCALATION
+错误码 | 错误码 | 语义/可恢复性
+CRSDL_INPUT_INVALID | CRSDL_INPUT_INVALID | 输入Schema错误；修改后可恢复
+CRSDL_FORBIDDEN | CRSDL_FORBIDDEN | 越权/跨租户；不可在原请求恢复
+CRSDL_STALE_RESUME | CRSDL_STALE_RESUME | 旧interrupt或实体版本；刷新后可恢复
+CRSDL_INVALID_TRANSITION | CRSDL_INVALID_TRANSITION | 违反状态机不变量；停止并告警
+CRSDL_EVIDENCE_INSUFFICIENT | CRSDL_EVIDENCE_INSUFFICIENT | 证据不足；请求补充
+CRSDL_MODEL_UNAVAILABLE | CRSDL_MODEL_UNAVAILABLE | 模型暂时不可用；规则降级或等待
+CRSDL_CONFLICT_UNKNOWN | CRSDL_CONFLICT_UNKNOWN | 检测/分类/CCI失败；不阻断学习
+CRSDL_BUDGET_EXCEEDED | CRSDL_BUDGET_EXCEEDED | 循环/Token/时限超限；暂停或人工帮助
+CRSDL_CONCURRENCY_CONFLICT | CRSDL_CONCURRENCY_CONFLICT | 乐观锁冲突；重读后重算
+CRSDL_PERSISTENCE_FAILED | CRSDL_PERSISTENCE_FAILED | 关键持久化失败；原thread可重试
+
+## TABLE 87
+上线原则：若无法证明流程可恢复、无重复副作用、可回滚、可观测，并且无法证明学习者最终决定权与认知冲突启动边界未被破坏，则不得仅因正常路径跑通而上线。

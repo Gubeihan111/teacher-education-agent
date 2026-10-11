@@ -1,0 +1,6 @@
+"""WF2 workflow safety bounds."""
+
+MAX_REVISION_ROUNDS = 3
+WORKFLOW_TIMEOUT_REQUIRED = True
+HUMAN_REVIEW_EXIT_REQUIRED = True
+
