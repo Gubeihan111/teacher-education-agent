@@ -456,4 +456,7 @@ git push -u origin feat/wf1-workflow
 - `POST /api/v1/workflows/{workflow_name}/resume`
 - `GET /api/v1/workflows/{workflow_name}/{thread_id}`
 
-开发人员协作流程见 [GitHub 开发协作指南](docs/GITHUB_DEVELOPER_COLLABORATION_GUIDE.md)。
+开发人员协作流程见：
+
+- [六人团队完整开发手册](docs/TEAM_DEVELOPMENT_GUIDE.md)
+- [GitHub 开发协作指南](docs/GITHUB_DEVELOPER_COLLABORATION_GUIDE.md)
