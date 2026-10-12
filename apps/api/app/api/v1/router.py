@@ -49,4 +49,9 @@ async def workflow_status(workflow_name: str, thread_id: str, request: Request):
     if factory is None: raise HTTPException(404,"unknown workflow")
     graph=factory(checkpointer=container.checkpointer)
     snapshot=await graph.aget_state({"configurable":{"thread_id":thread_id}})
-    return {"values":snapshot.values,"next":list(snapshot.next)}
+    interrupts = [
+        {"id": getattr(item, "id", None), "value": item.value}
+        for task in getattr(snapshot, "tasks", ())
+        for item in getattr(task, "interrupts", ())
+    ]
+    return {"values":snapshot.values,"next":list(snapshot.next),"interrupts":interrupts}

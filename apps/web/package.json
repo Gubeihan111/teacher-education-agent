@@ -1,8 +1,11 @@
 {
   "name": "@teacher-education-agent/web",
   "private": true,
-  "version": "0.1.0",
-  "scripts": {},
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "check": "node --check src/app/main.js && node --check src/services/api.js && node --check src/features/workflows.js && node --check src/utils/escape-html.js"
+  },
   "dependencies": {},
   "devDependencies": {}
 }

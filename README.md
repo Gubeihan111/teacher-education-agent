@@ -155,7 +155,7 @@ teacher-education-agent/
 ### `apps/`：应用入口
 
 - `apps/api/`：对外提供 `/api/v1` 接口，负责工作流启动、恢复、状态查询和知识入库。
-- `apps/web/`：前端工程，目前保留页面、组件、状态和服务目录。
+- `apps/web/`：原生 HTML/CSS/JavaScript 前端，已补充四阶段工作台、任务表单、状态查询、人工确认与资料上传；前端细节见 [Web说明](apps/web/README.md)。
 - `apps/worker/`：承载不适合在 HTTP 请求内同步完成的耗时任务。
 
 ### `contracts/`：跨模块协议
@@ -242,9 +242,9 @@ wf*_*/
 
 这是建议的下一步结构，尚未完成拆分前，不要把这些文件视为已经存在。
 
-## 六人开发分工
+## 七人开发分工
 
-建议采用“4 名工作流负责人 + 2 名工具负责人”，总人数为 6 人。
+采用“4 名工作流负责人 + 2 名工具负责人 + 1 名前端负责人”，总人数为 7 人。原有六人的责任保持不变，成员7统一负责网页体验和 API 对接。
 
 | 成员 | 主要职责 | 允许修改的核心目录 | 建议分支 |
 | --- | --- | --- | --- |
@@ -254,6 +254,7 @@ wf*_*/
 | 成员4 | WF4 会反思与迁移的证据、策略验证和迁移流程 | `workflows/wf4_reflection_transfer_v1/`、`wf4_manifest.py` | `feat/wf4-workflow` |
 | 成员5 | 分析、检测、分类、计算、比较、评价和验证工具 | 四个工具目录中的 `analysis_tools.py` | `feat/analysis-tools` |
 | 成员6 | 生成、推荐、检索、模型、存储和外部服务工具 | 四个工具目录中的 `action_tools.py` | `feat/service-tools` |
+| 成员7 | 网页、公共组件、任务表单、状态展示、人工确认、资料上传和 API 对接 | `apps/web/` | `feat/web-workbench` |
 
 ### 成员1：WF1工作流负责人
 
@@ -314,6 +315,18 @@ wf*_*/
 代表性工具包括 `resource_recommender`、`learning_feedback`、`evidence_store`、`goal_generator`、`knowledge_retrieval`、`virtual_student_responder`、`scaffold_recommender`、`transfer_task_generator` 和 `formal_evaluation_request_builder`。
 
 模型生成结果必须标记为候选结果，需要时进入人工复核，不能直接写成正式评分或终态。
+
+### 成员7：前端负责人
+
+- 维护成长首页和四个培养阶段的页面、导航、响应式布局及可访问性。
+- 通过 `apps/web/src/services/api.js` 调用 `/api/v1`，不直接调用模型或数据库。
+- 将工作流负责人提供的字段和确认要求转为表单，保留原 `thread_id` 恢复任务。
+- 展示后端真实的状态、候选产物、降级和错误，不在浏览器计算正式评分或决定路由。
+- 与四名工作流负责人共同确认字段含义；缺少接口时提交接口需求，由后端维护者实现。
+- 后续接入音频上传、课堂时间线、综合评价和成长画像；当前这些完整业务能力仍待后端支持。
+- 修改 JavaScript 或 CSS 时更新缓存版本。Codex/Claude Code任务模板见开发手册第4.7节。
+
+当前前端迁移：从 `E:\New project\frontend_mvp` 复用配色、文本转义函数和吉祥物；重新编写四阶段交互及当前 API 适配。原项目保持原样。详见[迁移映射](docs/migration/migration_map.md)。
 
 ### 公共文件管理
 
@@ -461,7 +474,9 @@ LangGraph 是本项目直接采用的工作流基础。其他案例是架构参�
 1. 将 `.env.example` 复制为 `.env`，填写 DeepSeek、DashScope 和数据库配置。
 2. 执行 `docker compose up --build -d`。
 3. 执行 `alembic upgrade head` 初始化数据库。
-4. 访问 `/api/v1/health` 查看服务状态。
+4. 打开 `http://localhost:8000/` 查看前端，访问 `/api/v1/health` 查看服务状态。
+
+前端由 FastAPI 同源托管，不需要额外安装 Node 依赖。已有后端环境可运行 `uvicorn apps.api.app.main:app --host 127.0.0.1 --port 8000`。当前后端使用固定演示身份，页面尚无真实登录和租户隔离，限本地开发用途。四条流程只完成静态检查，页面可提交请求不代表业务流程已经验收。
 
 工作流接口：
 
@@ -471,5 +486,5 @@ LangGraph 是本项目直接采用的工作流基础。其他案例是架构参�
 
 开发人员协作流程见：
 
-- [六人团队完整开发手册](docs/TEAM_DEVELOPMENT_GUIDE.md)
+- [七人团队完整开发手册](docs/TEAM_DEVELOPMENT_GUIDE.md)
 - [GitHub 开发协作指南](docs/GITHUB_DEVELOPER_COLLABORATION_GUIDE.md)
